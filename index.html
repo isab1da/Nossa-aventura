@@ -1,30 +1,151 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nossa Aventura</title>
     <style>
-        body { background: #1a1a1a; display: flex; flex-direction: column; align-items: center; margin: 0; font-family: 'Courier New', Courier, monospace; }
-        #game-container { width: 360px; height: 400px; background: #87CEEB; border: 10px solid #333; position: relative; overflow: hidden; margin-top: 20px; }
+        body { background: #1a1a1a; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
+        #game-container { position: relative; width: 320px; height: 320px; border: 5px solid #333; overflow: hidden; background: #87CEEB; }
+        canvas { display: block; image-rendering: pixelated; }
         
-        /* Controles simulando a foto */
-        #controls { width: 360px; height: 300px; background: #2c3e50; position: relative; border-radius: 0 0 20px 20px; }
-        .d-pad { position: absolute; left: 20px; top: 50px; width: 120px; height: 120px; background: #555; clip-path: polygon(33% 0%, 66% 0%, 66% 33%, 100% 33%, 100% 66%, 66% 66%, 66% 100%, 33% 100%, 33% 66%, 0% 66%, 0% 33%, 33% 33%); }
-        .button-a, .button-b { position: absolute; width: 70px; height: 70px; border-radius: 50%; background: #9b2c5e; color: #521832; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; }
-        .button-a { right: 20px; top: 40px; }
-        .button-b { right: 100px; top: 90px; }
+        /* Interface de Diálogo */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; background: rgba(0,0,0,0.7); color: white; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; text-align: center; }
+        .choice-btn { background: white; color: black; border: none; padding: 10px; margin: 5px; width: 90%; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        
+        /* Controles Estilo Gameboy */
+        #controls { width: 320px; height: 200px; background: #2c3e50; position: relative; border-radius: 0 0 20px 20px; }
+        .d-pad { position: absolute; left: 20px; top: 50px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; }
+        .arrow { background: #444; border: none; color: white; width: 40px; height: 40px; position: absolute; }
+        #btnLeft { left: 0; top: 30px; }
+        #btnRight { right: 0; top: 30px; }
+        
+        .action-btns { position: absolute; right: 20px; top: 40px; }
+        .btn-circle { width: 60px; height: 60px; border-radius: 50%; border: none; color: white; font-weight: bold; font-size: 20px; margin-left: 10px; }
+        #btnA { background: #9b2c5e; } /* Interagir */
+        #btnB { background: #444; }    /* Pular */
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <div style="text-align: center; margin-top: 150px;">[Cenário Pixel Art Aqui]</div>
+        <canvas id="gameCanvas" width="320" height="320"></canvas>
+        <div id="ui-layer">
+            <p id="dialog-text"></p>
+            <div id="choices"></div>
+        </div>
     </div>
 
     <div id="controls">
-        <div class="d-pad"></div>
-        <div class="button-b">B</div>
-        <div class="button-a">A</div>
+        <div class="d-pad">
+            <button class="arrow" id="btnLeft">◀</button>
+            <button class="arrow" id="btnRight">▶</button>
+        </div>
+        <div class="action-btns">
+            <button class="btn-circle" id="btnB">B</button>
+            <button class="btn-circle" id="btnA">A</button>
+        </div>
     </div>
 
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const uiLayer = document.getElementById('ui-layer');
+    const dialogText = document.getElementById('dialog-text');
+    const choicesContainer = document.getElementById('choices');
+
+    // Estado do Jogo
+    let gameState = "playing"; // playing, dialog, end
+    const gravity = 0.8;
+    
+    // Personagens
+    let player = {
+        x: 30, y: 180, w: 45, h: 80, 
+        velX: 0, velY: 0, 
+        isJumping: false,
+        img: new Image(),
+        dir: 'frente'
+    };
+    player.img.src = 'Ele_frente.PNG';
+
+    let partner = { x: 240, y: 180, w: 45, h: 80, img: new Image() };
+    partner.img.src = 'Ela_frente.PNG';
+
+    // Movimentação
+    const keys = { left: false, right: false };
+
+    function jump() {
+        if (!player.isJumping) {
+            player.velY = -12;
+            player.isJumping = true;
+        }
+    }
+
+    function showDialog() {
+        gameState = "dialog";
+        uiLayer.style.display = 'flex';
+        dialogText.innerText = "Você me achou!! Mas porque você demorou tanto? Você não me ama? 🥺";
+        choicesContainer.innerHTML = `
+            <button class="choice-btn" onclick="endGame(false)">mmhuãã 🥴</button>
+            <button class="choice-btn" onclick="endGame(false)">Ah não, de novo isso? 😤</button>
+            <button class="choice-btn" onclick="endGame(true)">Vc ainda tem dúvida? Te amo muito ♥️</button>
+        `;
+    }
+
+    function endGame(win) {
+        choicesContainer.innerHTML = "";
+        if (win) {
+            dialogText.innerText = "E ELES VIVERAM FELIZES PARA SEMPRE... ❤️";
+        } else {
+            dialogText.innerText = "GAME OVER 💔";
+            setTimeout(() => location.reload(), 3000);
+        }
+    }
+
+    // Controles Touch
+    document.getElementById('btnLeft').ontouchstart = () => { keys.left = true; player.img.src = 'Ele_esquerda.PNG'; };
+    document.getElementById('btnLeft').ontouchend = () => keys.left = false;
+    document.getElementById('btnRight').ontouchstart = () => { keys.right = true; player.img.src = 'Ele_direita.PNG'; };
+    document.getElementById('btnRight').ontouchend = () => keys.right = false;
+    document.getElementById('btnB').onclick = jump;
+    document.getElementById('btnA').onclick = () => { if(Math.abs(player.x - partner.x) < 40) showDialog(); };
+
+    function update() {
+        if (gameState !== "playing") return;
+
+        if (keys.left && player.x > 0) player.x -= 3;
+        if (keys.right && player.x < 275) player.x += 3;
+
+        // Gravidade
+        player.velY += gravity;
+        player.y += player.velY;
+
+        if (player.y > 180) {
+            player.y = 180;
+            player.velY = 0;
+            player.isJumping = false;
+        }
+
+        // Se soltar os botões, volta a ficar de frente
+        if (!keys.left && !keys.right && !player.isJumping) player.img.src = 'Ele_frente.PNG';
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Chão
+        ctx.fillStyle = '#6d4c41';
+        ctx.fillRect(0, 260, canvas.width, 60);
+
+        // Desenhar Personagens
+        ctx.drawImage(partner.img, partner.x, partner.y, partner.w, partner.h);
+        ctx.drawImage(player.img, player.x, player.y, player.w, player.h);
+
+        update();
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+</script>
 </body>
 </html>
