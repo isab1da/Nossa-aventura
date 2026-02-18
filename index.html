@@ -2,201 +2,189 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nossa Aventura</title>
+    <title>Aventura do Eder & Isabela</title>
     <style>
-        :root { --gb-body: #9e9e9e; --gb-accent: #9b2c5e; }
-        body { background: #1a1a1a; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
-        #game-console { background: var(--gb-body); padding: 20px; border-radius: 10px 10px 60px 10px; border: 4px solid #333; }
-        #game-container { position: relative; width: 320px; height: 320px; border: 15px solid #333; overflow: hidden; background: #000; }
-        canvas { display: block; image-rendering: pixelated; }
-        #dialog-ui { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: white; border: 3px solid black; padding: 10px; width: 85%; min-height: 60px; font-size: 11px; display: none; z-index: 15; box-sizing: border-box; }
-        #dialog-name { font-weight: bold; color: var(--gb-accent); margin-bottom: 4px; display: block; }
-        #instruction-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #ffd700; border: 3px solid #000; padding: 15px; width: 80%; text-align: center; display: none; z-index: 20; font-weight: bold; font-size: 12px;}
-        #controls { width: 350px; height: 180px; position: relative; margin-top: 10px; }
-        .d-pad { position: absolute; left: 30px; top: 40px; width: 90px; height: 90px; }
-        .arrow { background: #333; border: none; width: 40px; height: 40px; position: absolute; color: white; font-size: 18px; }
-        #btnLeft { left: 0; top: 25px; }
-        #btnRight { right: 0; top: 25px; }
-        .action-btns { position: absolute; right: 30px; top: 30px; transform: rotate(-25deg); }
-        .btn-circle { width: 55px; height: 55px; border-radius: 50%; border: none; color: white; font-weight: bold; font-size: 20px; margin-left: 10px; box-shadow: 3px 3px 0px #6b1d41; }
-        #btnA { background: var(--gb-accent); }
-        #btnB { background: #444; }
-        #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 30; }
+        body { background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        
+        #game-screen {
+            width: 800px;
+            height: 450px;
+            position: relative;
+            background-color: #000;
+            overflow: hidden;
+            border: 4px solid #fff;
+            image-rendering: pixelated;
+        }
+
+        #background { width: 100%; height: 100%; position: absolute; background-size: cover; }
+        
+        .sprite { position: absolute; bottom: 50px; height: 100px; z-index: 10; transition: all 0.2s; }
+        #player { left: 50px; }
+        #npc { right: 100px; display: none; } /* Isabela, Feia ou Neymar */
+        #taverna-obj { position: absolute; right: 50px; bottom: 40px; width: 300px; display: none; }
+
+        /* Interface de Diálogo e Escolhas */
+        #ui-box {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 15px;
+            border: 2px solid #fff;
+            font-family: 'Courier New', monospace;
+            z-index: 100;
+            display: none;
+        }
+
+        .btn-opcao {
+            display: block;
+            width: 100%;
+            background: #333;
+            color: white;
+            border: 1px solid white;
+            padding: 8px;
+            margin-top: 5px;
+            cursor: pointer;
+            text-align: left;
+        }
+        .btn-opcao:hover { background: #555; }
     </style>
 </head>
 <body>
 
-<div id="game-console">
-    <div id="game-container">
-        <div id="start-overlay"><button style="padding:15px; background:var(--gb-accent); color:white; border:none; border-radius:5px; cursor:pointer;" onclick="iniciarCena()">INICIAR HISTÓRIA</button></div>
-        <div id="instruction-box"></div>
-        <div id="dialog-ui"><span id="dialog-name"></span><span id="dialog-content"></span></div>
-        <canvas id="gameCanvas" width="320" height="320"></canvas>
+<div id="game-screen">
+    <div id="background"></div>
+    <img id="taverna-obj" src="Taverna.PNG">
+    <img id="player" src="Ele_frente.PNG" class="sprite">
+    <img id="npc" src="" class="sprite">
+
+    <div id="ui-box">
+        <div id="texto-narracao"></div>
+        <div id="container-opcoes"></div>
     </div>
 </div>
 
-<div id="controls">
-    <div class="d-pad"><button class="arrow" id="btnLeft">◀</button><button class="arrow" id="btnRight">▶</button></div>
-    <div class="action-btns"><button class="btn-circle" id="btnB">B</button><button class="btn-circle" id="btnA">A</button></div>
-</div>
-
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const dialogUI = document.getElementById('dialog-ui');
-    const dName = document.getElementById('dialog-name');
-    const dContent = document.getElementById('dialog-content');
-    const instrBox = document.getElementById('instruction-box');
+    const player = document.getElementById('player');
+    const npc = document.getElementById('npc');
+    const bg = document.getElementById('background');
+    const ui = document.getElementById('ui-box');
+    const txt = document.getElementById('texto-narracao');
+    const opt = document.getElementById('container-opcoes');
+    const tavernaImg = document.getElementById('taverna-obj');
 
-    let gameState = "wait";
-    let introStep = 0, transitionAlpha = 0, walkToggle = false, cameraX = 0;
-    let checkpointX = 50;
+    let faseAtual = "quarto";
 
-    const imgQuarto = new Image(); imgQuarto.src = 'Quarto.PNG';
-    const imgFundo = new Image(); imgFundo.src = 'Fundo_aventura.PNG';
-    const imgEleFrente = new Image(); imgEleFrente.src = 'Ele_frente.PNG';
-    const imgFeia = new Image(); imgFeia.src = 'Feia.PNG';
-    
-    let sprEder = new Image(); sprEder.src = 'Ele_frente.PNG';
-    let sprIsabela = new Image(); sprIsabela.src = 'Ela_frente.PNG';
-
-    let eIntro = { x: 180, y: 150, w: 80, h: 140 }; 
-    let pIntro = { x: -80, y: 150, w: 80, h: 140 }; 
-    let player = { x: 50, y: 190, w: 35, h: 60, velY: 0, isJumping: false, dead: false };
-    let partner = { x: 5000, y: 190, w: 35, h: 60 }; 
-    let feia = { x: 2800, y: 180, w: 45, h: 75 };
-
-    const hazards = [
-        {type: 'spike', x: 600}, {type: 'hole', x: 1000, w: 80}, {type: 'spike', x: 1600},
-        {type: 'hole', x: 2100, w: 90}, {type: 'spike', x: 2500}
-    ];
-
-    const dialogosIntro = [
-        { n: "Eder", t: "Oi amor, já to quase acabando o jogo..." },
-        { n: "Isabela", t: "Posso jogar com você?" },
-        { n: "Eder", t: "Eu só queria finalizar essa parte sozinho..." },
-        { n: "Isabela", t: "Ah, por favor! Então eu controlo o teclado e, você, o mouse 🥹" },
-        { n: "Eder", t: "... acho que isso não vai dar certo, amor" },
-        { n: "Isabela", t: "Vai sim! Só vou apertar esse bot-" }
-    ];
-
-    const dialogosAventura = [
-        { n: "Eder", t: "O que? Onde é que eu tô? 😨 E cade a Isabela?" },
-        { n: "Eder", t: "Espera, eu reconheço esse lugar... 🤨" },
-        { n: "Eder", t: "Eu - eu tô dentro do meu jogo! 😟" },
-        { n: "Eder", t: "Aquele botão que a Isabela apertou deve ter transportado a gente pra cá." },
-        { n: "Eder", t: "Mas onde será que ela foi parar..? 🤨" }
-    ];
-
-    function iniciarCena() { document.getElementById('start-overlay').style.display='none'; gameState="walking_in"; }
-
-    function avancarDialogo() {
-        if (gameState === "dialogo_intro") {
-            if (introStep < dialogosIntro.length) {
-                dName.innerText = dialogosIntro[introStep].n; dContent.innerText = dialogosIntro[introStep].t; introStep++;
-            } else { dialogUI.style.display='none'; abducao(); }
-        } else if (gameState === "dialogo_aventura") {
-            if (introStep < dialogosAventura.length) {
-                dName.innerText = dialogosAventura[introStep].n; dContent.innerText = dialogosAventura[introStep].t; introStep++;
-            } else { 
-                dialogUI.style.display='none'; instrBox.style.display='block'; instrBox.innerText = "Ache a Isabela! Explore o ambiente.";
-                setTimeout(() => { instrBox.style.display='none'; gameState="playing"; }, 3000);
-            }
-        }
+    // 1. INÍCIO: O QUARTO
+    function iniciarJogo() {
+        bg.style.backgroundImage = "url('Quarto.PNG')";
+        exibirDialogo("Eder acorda em um mundo estranho... Ele precisa encontrar Isabela!", [
+            { texto: "Sair do quarto", acao: irParaEstrada }
+        ]);
     }
 
-    function abducao() {
-        gameState = "transition";
-        let flash = setInterval(() => {
-            transitionAlpha += 0.05;
-            if (transitionAlpha >= 1) {
-                clearInterval(flash); gameState = "dialogo_aventura"; introStep = 0; transitionAlpha = 0;
-                dialogUI.style.display = 'block'; avancarDialogo();
-            }
-        }, 50);
-    }
-
-    function resetPlayer() {
-        player.dead = true;
+    // 2. A ESTRADA (Obstáculos e Feia.PNG)
+    function irParaEstrada() {
+        faseAtual = "estrada";
+        ui.style.display = "none";
+        bg.style.backgroundImage = "url('Cenario_Estrada.PNG')";
+        player.src = "Ele_direita.PNG";
+        
+        // Simula o encontro com a Feia.PNG após um tempo andando
         setTimeout(() => {
-            player.x = checkpointX; player.y = 190; player.velY = 0; player.dead = false;
+            npc.src = "Feia.PNG";
+            npc.style.display = "block";
+            exibirDialogo("Uma criatura estranha bloqueia o caminho! (Feia.PNG)", [
+                { texto: "Desviar e continuar", acao: chegarNaTaverna }
+            ]);
+        }, 2000);
+    }
+
+    // 3. A TAVERNA
+    function chegarNaTaverna() {
+        npc.style.display = "none";
+        tavernaImg.style.display = "block";
+        player.src = "Ele_frente.PNG";
+
+        exibirDialogo("Você está com sede e encontra a Taverna Nova Opção no caminho. O que fazer?", [
+            { texto: "A) Só umazinha pra matar a sede 🍻", acao: resultadoA },
+            { texto: "B) Passo longe! Prefiro encontrar o amor da minha vida ♥️", acao: resultadoB },
+            { texto: "C) Comprar um docinho para a Isabela 🍫", acao: resultadoC }
+        ]);
+    }
+
+    // LÓGICA DAS ESCOLHAS
+    function resultadoA() {
+        exibirDialogo("GAME OVER! Você me odeia?? 🤨", [
+            { texto: "Voltar ao Checkpoint", acao: () => location.reload() }
+        ]);
+    }
+
+    function resultadoB() {
+        tavernaImg.style.display = "none";
+        exibirDialogo("Você ignora a sede e foca no seu amor. Mas quem é aquele ali na frente?", [
+            { texto: "Continuar andando", acao: encontrarNeymar }
+        ]);
+    }
+
+    function resultadoC() {
+        tavernaImg.style.display = "none";
+        txt.innerHTML = "Você realmente conhece sua amada! O cheiro do doce atrai Isabela...";
+        opt.innerHTML = "";
+        
+        // Isabela aparece andando
+        npc.src = "Ela_andando_esquerda.PNG";
+        npc.style.display = "block";
+        npc.style.right = "800px"; // Começa fora
+        
+        setTimeout(() => {
+            npc.style.transition = "right 3s linear";
+            npc.style.right = "200px"; // Isabela chega perto do Eder
+            
+            setTimeout(() => {
+                npc.src = "Ela_esquerda.PNG";
+                finalC();
+            }, 3200);
         }, 500);
     }
 
-    document.getElementById('btnA').onclick = () => {
-        if(gameState === "playing" && Math.abs(player.x - feia.x) < 50) {
-            gameState = "game_over_ciumes";
-            instrBox.style.display = 'block';
-            instrBox.style.background = "red"; instrBox.style.color = "white";
-            instrBox.innerText = "GAME OVER! Por acaso essa parece a Isabela pra vc?? Quem te autorizou a falar com qualquer rapariga na rua?!";
-            setTimeout(() => { location.reload(); }, 5000);
-        } else { avancarDialogo(); }
-    };
-    document.getElementById('btnB').onclick = () => { if(gameState === "playing" && !player.isJumping && !player.dead) { player.velY = -12; player.isJumping = true; } };
-
-    let keys = { L: false, R: false };
-    document.getElementById('btnLeft').ontouchstart = (e) => { e.preventDefault(); keys.L = true; };
-    document.getElementById('btnLeft').ontouchend = () => keys.L = false;
-    document.getElementById('btnRight').ontouchstart = (e) => { e.preventDefault(); keys.R = true; };
-    document.getElementById('btnRight').ontouchend = () => keys.R = false;
-
-    setInterval(() => { if(keys.L || keys.R || gameState === "walking_in") walkToggle = !walkToggle; }, 200);
-
-    function draw() {
-        ctx.clearRect(0, 0, 320, 320);
-        if (["walking_in", "dialogo_intro", "transition"].includes(gameState)) {
-            ctx.drawImage(imgQuarto, 0, 0, 320, 320);
-            ctx.drawImage(imgEleFrente, eIntro.x, eIntro.y, eIntro.w, eIntro.h);
-            if (gameState === "walking_in") {
-                sprIsabela.src = walkToggle ? 'Ela_andando_direita.PNG' : 'Ela_direita.PNG';
-                if (pIntro.x < 60) pIntro.x += 2; else { gameState = "dialogo_intro"; dialogUI.style.display = 'block'; avancarDialogo(); }
-            } else sprIsabela.src = 'Ela_frente.PNG';
-            ctx.drawImage(sprIsabela, pIntro.x, pIntro.y, pIntro.w, pIntro.h);
-            if (gameState === "transition") { ctx.fillStyle = `rgba(255,255,255,${transitionAlpha})`; ctx.fillRect(0,0,320,320); }
-        } 
-        else if (gameState === "dialogo_aventura" || gameState === "playing" || gameState === "game_over_ciumes") {
-            cameraX = player.x - 80; if(cameraX < 0) cameraX = 0;
-            ctx.drawImage(imgFundo, -(cameraX * 0.1) % 320, 0, 640, 250); 
-            ctx.save(); ctx.translate(-cameraX, 0); 
-            ctx.fillStyle = "#4a3528"; ctx.fillRect(cameraX, 250, 320, 70); 
-
-            // Checkpoint (Plaquinha)
-            ctx.fillStyle = "brown"; ctx.fillRect(2950, 210, 5, 40); ctx.fillRect(2930, 210, 40, 20);
-            ctx.fillStyle = "white"; ctx.font = "10px Arial"; ctx.fillText("CHECK", 2935, 223);
-            if(player.x > 2950) checkpointX = 2950;
-
-            hazards.forEach(h => {
-                if(h.type === 'spike') {
-                    ctx.fillStyle = "green"; ctx.beginPath(); ctx.moveTo(h.x, 250); ctx.lineTo(h.x+20, 220); ctx.lineTo(h.x+40, 250); ctx.fill();
-                    if(!player.dead && player.x+20 > h.x && player.x < h.x+20 && player.y > 170) resetPlayer();
-                } else {
-                    ctx.fillStyle = "#000"; ctx.fillRect(h.x, 250, h.w, 70);
-                    if(!player.dead && player.x+15 > h.x && player.x+15 < h.x+h.w && player.y >= 190 && !player.isJumping) resetPlayer();
-                }
-            });
-
-            ctx.drawImage(imgFeia, feia.x, feia.y, feia.w, feia.h);
-            if(Math.abs(player.x - feia.x) < 50 && gameState === "playing") {
-                ctx.fillStyle = "white"; ctx.fillText("Aperte A para falar", feia.x - 20, feia.y - 10);
-            }
-
-            if (keys.L) sprEder.src = walkToggle ? 'Ele_andando_esquerda.PNG' : 'Ele_esquerda.PNG';
-            else if (keys.R) sprEder.src = walkToggle ? 'Ele_andando_direita.PNG' : 'Ele_direita.PNG';
-            else sprEder.src = 'Ele_frente.PNG';
-
-            if (gameState === "playing" && !player.dead) {
-                if (keys.L && player.x > cameraX) player.x -= 4;
-                if (keys.R) player.x += 4;
-                player.velY += 0.7; player.y += player.velY;
-                if (player.y > 190) { player.y = 190; player.velY = 0; player.isJumping = false; }
-            }
-            ctx.drawImage(sprEder, player.x, player.y, player.w, player.h);
-            ctx.restore();
-        }
-        requestAnimationFrame(draw);
+    function finalC() {
+        exibirDialogo("Isabela: Amor! Nem acredito que é você!<br>Eder: Finalmente te achei! Comprei um docinho 🥰", [
+            { texto: "Viver felizes para sempre", acao: () => {
+                txt.innerHTML = "Juntos, conseguiram escapar do jogo e voltar ao mundo real! <br><strong>FIM DE JOGO</strong>";
+                opt.innerHTML = "";
+            }}
+        ]);
     }
-    draw();
+
+    // 4. O NEYMAR (Apenas engraçado)
+    function encontrarNeymar() {
+        npc.src = "Neymar.PNG";
+        npc.style.display = "block";
+        exibirDialogo("Neymar Jr aparece do nada! <br>'E aí parça, tá procurando a Isabela? Ela foi por ali!'", [
+            { texto: "Rir e continuar procurando", acao: () => alert("Continua na próxima atualização!") }
+        ]);
+    }
+
+    // Função auxiliar para exibir a UI
+    function exibirDialogo(texto, botoes) {
+        ui.style.display = "block";
+        txt.innerHTML = texto;
+        opt.innerHTML = "";
+        botoes.forEach(b => {
+            const btn = document.createElement("button");
+            btn.className = "btn-opcao";
+            btn.innerHTML = b.texto;
+            btn.onclick = b.acao;
+            opt.appendChild(btn);
+        });
+    }
+
+    window.onload = iniciarJogo;
 </script>
+
 </body>
 </html>
