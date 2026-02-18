@@ -15,7 +15,7 @@
         #instruction-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #ffd700; border: 3px solid #000; padding: 15px; width: 80%; text-align: center; display: none; z-index: 20; font-weight: bold; }
         #controls { width: 350px; height: 180px; position: relative; margin-top: 10px; }
         .d-pad { position: absolute; left: 30px; top: 40px; width: 90px; height: 90px; }
-        .arrow { background: #333; border: none; width: 40px; height: 40px; position: absolute; color: white; font-size: 18px; }
+        .arrow { background: #333; border: none; width: 45px; height: 45px; position: absolute; color: white; font-size: 20px; }
         #btnLeft { left: 0; top: 25px; }
         #btnRight { right: 0; top: 25px; }
         .action-btns { position: absolute; right: 30px; top: 30px; transform: rotate(-25deg); }
@@ -65,12 +65,14 @@
 
     let eIntro = { x: 180, y: 150, w: 80, h: 140 }; 
     let pIntro = { x: -80, y: 150, w: 80, h: 140 }; 
-    let player = { x: 50, y: 190, w: 35, h: 60, velY: 0, isJumping: false };
-    let partner = { x: 1200, y: 190, w: 35, h: 60 }; // Isabela bem longe
+    let player = { x: 50, y: 190, w: 35, h: 60, velY: 0, isJumping: false, dead: false };
+    let partner = { x: 3000, y: 190, w: 35, h: 60 }; // Distância aumentada para história longa
 
-    // Obstáculos (posição x no mundo)
     const hazards = [
-        {type: 'spike', x: 400}, {type: 'hole', x: 650, w: 60}, {type: 'spike', x: 900}
+        {type: 'spike', x: 600}, 
+        {type: 'hole', x: 1000, w: 80}, 
+        {type: 'spike', x: 1600},
+        {type: 'hole', x: 2200, w: 100}
     ];
 
     const dialogosIntro = [
@@ -104,8 +106,6 @@
                 dialogUI.style.display='none'; instrBox.style.display='block';
                 setTimeout(() => { instrBox.style.display='none'; gameState="playing"; }, 3000);
             }
-        } else if (gameState === "final_conversa") {
-             // Lógica final aqui
         }
     }
 
@@ -121,7 +121,7 @@
     }
 
     document.getElementById('btnA').onclick = avancarDialogo;
-    document.getElementById('btnB').onclick = () => { if(gameState === "playing" && !player.isJumping) { player.velY = -11; player.isJumping = true; } };
+    document.getElementById('btnB').onclick = () => { if(gameState === "playing" && !player.isJumping && !player.dead) { player.velY = -12; player.isJumping = true; } };
 
     let keys = { L: false, R: false };
     document.getElementById('btnLeft').ontouchstart = (e) => { e.preventDefault(); keys.L = true; };
@@ -130,6 +130,16 @@
     document.getElementById('btnRight').ontouchend = () => keys.R = false;
 
     setInterval(() => { if(keys.L || keys.R || gameState === "walking_in") walkToggle = !walkToggle; }, 200);
+
+    function resetPlayer() {
+        player.dead = true;
+        setTimeout(() => {
+            player.x = cameraX + 20;
+            player.y = 190;
+            player.velY = 0;
+            player.dead = false;
+        }, 500);
+    }
 
     function draw() {
         ctx.clearRect(0, 0, 320, 320);
@@ -146,57 +156,50 @@
             if (gameState === "transition") { ctx.fillStyle = `rgba(255,255,255,${transitionAlpha})`; ctx.fillRect(0,0,320,320); }
         } 
         else if (gameState === "dialogo_aventura" || gameState === "playing") {
-            // Câmera segue o jogador
-            cameraX = player.x - 50;
+            cameraX = player.x - 80;
             if(cameraX < 0) cameraX = 0;
 
-            // Fundo Paralaxe (se move mais devagar)
-            ctx.drawImage(imgFundo, -(cameraX * 0.5), 0, 800, 250); 
+            // Fundo Paralaxe LENTÍSSIMO (0.1)
+            ctx.drawImage(imgFundo, -(cameraX * 0.1) % 320, 0, 640, 250); 
             
             ctx.save();
-            ctx.translate(-cameraX, 0); // Move todo o mundo
-            
-            // Chão infinito
+            ctx.translate(-cameraX, 0); 
+
+            // Chão Infinito
             ctx.fillStyle = "#4a3528"; ctx.fillRect(cameraX, 250, 320, 70); 
 
-            // Hazards
             hazards.forEach(h => {
                 if(h.type === 'spike') {
                     ctx.fillStyle = "green"; ctx.beginPath(); 
-                    ctx.moveTo(h.x, 250); ctx.lineTo(h.x+15, 230); ctx.lineTo(h.x+30, 250); ctx.fill();
-                    if(player.x+20 > h.x && player.x < h.x+20 && player.y > 180) { player.x = 50; alert("Ops! Espinhos!"); }
+                    ctx.moveTo(h.x, 250); ctx.lineTo(h.x+20, 220); ctx.lineTo(h.x+40, 250); ctx.fill();
+                    if(!player.dead && player.x+25 > h.x && player.x < h.x+25 && player.y > 170) resetPlayer();
                 } else {
                     ctx.fillStyle = "#000"; ctx.fillRect(h.x, 250, h.w, 70);
-                    if(player.x > h.x && player.x < h.x+h.w-20 && player.y > 190) { player.x = 50; alert("Caiu no buraco!"); }
+                    // Colisão real com buraco
+                    if(!player.dead && player.x + 15 > h.x && player.x + 15 < h.x + h.w && player.y >= 190 && !player.isJumping) {
+                        player.y += 10;
+                        resetPlayer();
+                    }
                 }
             });
 
-            // Personagens no mundo
             ctx.drawImage(imgElaFrente, partner.x, partner.y, partner.w, partner.h);
             
             if (keys.L) sprEder.src = walkToggle ? 'Ele_andando_esquerda.PNG' : 'Ele_esquerda.PNG';
             else if (keys.R) sprEder.src = walkToggle ? 'Ele_andando_direita.PNG' : 'Ele_direita.PNG';
             else sprEder.src = 'Ele_frente.PNG';
 
-            if (gameState === "playing") {
-                if (keys.L && player.x > 0) player.x -= 4;
+            if (gameState === "playing" && !player.dead) {
+                if (keys.L && player.x > cameraX) player.x -= 4;
                 if (keys.R) player.x += 4;
-                player.velY += 0.6; player.y += player.velY;
+                player.velY += 0.7; player.y += player.velY;
                 if (player.y > 190) { player.y = 190; player.velY = 0; player.isJumping = false; }
-                if (Math.abs(player.x - partner.x) < 40) { gameState = "final_dialogo"; showFinalQuiz(); }
             }
             ctx.drawImage(sprEder, player.x, player.y, player.w, player.h);
             ctx.restore();
         }
         requestAnimationFrame(draw);
     }
-
-    function showFinalQuiz() {
-        dialogUI.style.display = 'flex'; dName.innerText = "Isabela";
-        dContent.innerText = "Você me achou!! Mas porque você demorou tanto? Você não me ama? 🥺";
-        // Lógica de escolhas (mmhuãã, etc) aqui conforme o código anterior
-    }
-
     draw();
 </script>
 </body>
