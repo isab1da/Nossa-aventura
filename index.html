@@ -9,14 +9,16 @@
         #game-container { position: relative; width: 320px; height: 320px; border: 5px solid #333; overflow: hidden; background: #000; }
         canvas { display: block; image-rendering: pixelated; }
         
-        /* UI e Diálogos */
+        /* Balão de Fala da Intro */
+        #intro-dialog { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: white; border: 2px solid black; padding: 8px; width: 80%; font-size: 12px; display: none; z-index: 5; border-radius: 5px; text-align: center; }
+
+        /* Camada de UI Final e Diálogos do Jogo */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; background: rgba(0,0,0,0.8); color: white; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; text-align: center; z-index: 10; }
         .choice-btn { background: white; color: black; border: none; padding: 10px; margin: 5px; width: 95%; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 14px; }
         
         #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 20; }
-        #start-btn { padding: 15px 30px; font-size: 18px; background: #9b2c5e; color: white; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; }
+        #start-btn { padding: 15px 30px; font-size: 18px; background: #9b2c5e; color: white; border: none; border-radius: 10px; cursor: pointer; }
 
-        /* Controles */
         #controls { width: 320px; height: 180px; background: #2c3e50; position: relative; border-radius: 0 0 20px 20px; }
         .d-pad { position: absolute; left: 20px; top: 40px; width: 100px; height: 100px; }
         .arrow { background: #444; border: none; color: white; width: 45px; height: 45px; position: absolute; font-size: 20px; }
@@ -31,7 +33,8 @@
 <body>
 
     <div id="game-container">
-        <div id="start-overlay"><button id="start-btn">ENTRAR NO JOGO</button></div>
+        <div id="start-overlay"><button id="start-btn">INICIAR HISTÓRIA</button></div>
+        <div id="intro-dialog"></div>
         <canvas id="gameCanvas" width="320" height="320"></canvas>
         <div id="ui-layer">
             <p id="dialog-text"></p>
@@ -54,146 +57,91 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const uiLayer = document.getElementById('ui-layer');
-    const dialogText = document.getElementById('dialog-text');
-    const choicesContainer = document.getElementById('choices');
+    const introDialog = document.getElementById('intro-dialog');
     const startOverlay = document.getElementById('start-overlay');
 
-    let gameState = "intro";
+    let gameState = "start_screen";
     let transitionAlpha = 0;
+    let introStep = 0;
 
-    // Carregamento de Imagens
-    const imgQuarto = new Image(); imgQuarto.src = 'quarto.png';
-    const imgFundo = new Image(); imgFundo.src = 'fundo_aventura.png';
+    const imgQuarto = new Image(); imgQuarto.src = 'Quarto.PNG';
+    const imgFundo = new Image(); imgFundo.src = 'Fundo_aventura.PNG';
     const playerImg = new Image(); playerImg.src = 'Ele_frente.PNG';
     const partnerImg = new Image(); partnerImg.src = 'Ela_frente.PNG';
 
-    // Configurações Físicas
-    let player = { x: 140, y: 180, w: 25, h: 45, velX: 0, velY: 0, isJumping: false };
-    let partner = { x: 170, y: 180, w: 25, h: 45 };
-    const gravity = 0.6;
-    const floorY = 250;
-    const keys = { left: false, right: false };
+    let pIntro = { x: -50, y: 180, w: 30, h: 50 }; // Você entrando
+    let eIntro = { x: 200, y: 180, w: 30, h: 50 }; // Ele no PC
+    let player = { x: 20, y: 190, w: 35, h: 60, velY: 0, isJumping: false };
+    let partner = { x: 270, y: 190, w: 35, h: 60 };
 
-    // Obstáculos (x, largura)
-    const spikes = [{x: 120, w: 30}];
-    const holes = [{x: 180, w: 40}];
+    const dialogos = [
+        { nome: "Ele", texto: "Oi amor, já to quase acabando o jogo..." },
+        { nome: "Eu", texto: "Posso jogar com você?" },
+        { nome: "Ele", texto: "Eu só queria finalizar essa parte sozinho..." },
+        { nome: "Eu", texto: "Ah, por favor! Então eu controlo o teclado e, você, o mouse 🥹" },
+        { nome: "Ele", texto: "... acho que isso não vai dar certo, amor" },
+        { nome: "Eu", texto: "Vai sim! Só vou apertar esse bot-" }
+    ];
 
-    function startAbduction() {
-        gameState = "transition";
+    function iniciarCena() {
         startOverlay.style.display = 'none';
+        gameState = "walking_in";
+    }
+
+    function proximoDialogo() {
+        if (introStep < dialogos.length) {
+            introDialog.style.display = 'block';
+            introDialog.innerText = `${dialogos[introStep].nome}: ${dialogos[introStep].texto}`;
+            introStep++;
+            setTimeout(proximoDialogo, 3000);
+        } else {
+            introDialog.style.display = 'none';
+            abducao();
+        }
+    }
+
+    function abducao() {
+        gameState = "transition";
         let flash = setInterval(() => {
             transitionAlpha += 0.05;
             if (transitionAlpha >= 1) {
                 clearInterval(flash);
-                setupAdventure();
+                gameState = "playing";
+                transitionAlpha = 0;
             }
         }, 50);
     }
 
-    function setupAdventure() {
-        gameState = "playing";
-        player = { x: 20, y: floorY - 60, w: 35, h: 60, velX: 0, velY: 0, isJumping: false };
-        partner = { x: 270, y: floorY - 60, w: 35, h: 60 };
-        transitionAlpha = 0;
-    }
-
-    function jump() {
-        if (!player.isJumping && gameState === "playing") {
-            player.velY = -10;
-            player.isJumping = true;
-            playerImg.src = 'Ele_frente.PNG';
-        }
-    }
-
-    function checkCollision() {
-        // Buracos
-        holes.forEach(h => {
-            if (player.x + player.w > h.x && player.x < h.x + h.w && player.y >= floorY - 10) {
-                resetGame("Cuidado com o buraco! 😮");
-            }
-        });
-        // Espinhos
-        spikes.forEach(s => {
-            if (player.x + player.w > s.x && player.x < s.x + s.w && player.y + player.h > floorY - 10) {
-                resetGame("Ai! Espinhos! 🌵");
-            }
-        });
-        // Vitória
-        if (Math.abs(player.x - partner.x) < 30 && gameState === "playing") {
-            showDialog();
-        }
-    }
-
-    function resetGame(msg) {
-        alert(msg);
-        setupAdventure();
-    }
-
-    function showDialog() {
-        gameState = "dialog";
-        uiLayer.style.display = 'flex';
-        dialogText.innerText = "Você me achou!! Mas porque você demorou tanto? Você não me ama? 🥺";
-        choicesContainer.innerHTML = `
-            <button class="choice-btn" onclick="endGame(false)">mmhuãã 🥴</button>
-            <button class="choice-btn" onclick="endGame(false)">Ah não, de novo isso? 😤</button>
-            <button class="choice-btn" onclick="endGame(true)">Vc ainda tem dúvida? Te amo muito ♥️</button>
-        `;
-    }
-
-    function endGame(win) {
-        choicesContainer.innerHTML = "";
-        if (win) dialogText.innerText = "E ELES VIVERAM FELIZES PARA SEMPRE... ❤️";
-        else { dialogText.innerText = "GAME OVER 💔"; setTimeout(() => location.reload(), 2000); }
-    }
-
-    // Controles
-    document.getElementById('start-btn').onclick = startAbduction;
-    document.getElementById('btnB').onclick = jump;
-    document.getElementById('btnLeft').ontouchstart = () => { keys.left = true; playerImg.src = 'Ele_esquerda.PNG'; };
-    document.getElementById('btnLeft').ontouchend = () => keys.left = false;
-    document.getElementById('btnRight').ontouchstart = () => { keys.right = true; playerImg.src = 'Ele_direita.PNG'; };
-    document.getElementById('btnRight').ontouchend = () => keys.right = false;
+    document.getElementById('start-btn').onclick = iniciarCena;
 
     function update() {
-        if (gameState !== "playing") return;
-        if (keys.left && player.x > 0) player.x -= 3;
-        if (keys.right && player.x < 285) player.x += 3;
-        
-        player.velY += gravity;
-        player.y += player.velY;
-        if (player.y > floorY - player.h) {
-            player.y = floorY - player.h;
-            player.velY = 0;
-            player.isJumping = false;
+        if (gameState === "walking_in") {
+            if (pIntro.x < 160) {
+                pIntro.x += 2;
+                partnerImg.src = 'Ela_direita.PNG';
+            } else {
+                partnerImg.src = 'Ela_frente.PNG';
+                gameState = "dialogo_intro";
+                proximoDialogo();
+            }
         }
-        if (!keys.left && !keys.right && !player.isJumping) playerImg.src = 'Ele_frente.PNG';
-        checkCollision();
     }
 
     function draw() {
         ctx.clearRect(0, 0, 320, 320);
-        if (gameState === "intro" || gameState === "transition") {
+        
+        if (gameState === "start_screen" || gameState === "walking_in" || gameState === "dialogo_intro" || gameState === "transition") {
             ctx.drawImage(imgQuarto, 0, 0, 320, 320);
-            ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
-            ctx.drawImage(partnerImg, partner.x, partner.y, partner.w, partner.h);
+            ctx.drawImage(playerImg, eIntro.x, eIntro.y, eIntro.w, eIntro.h);
+            ctx.drawImage(partnerImg, pIntro.x, pIntro.y, pIntro.w, pIntro.h);
+            
             if (gameState === "transition") {
                 ctx.fillStyle = `rgba(255,255,255,${transitionAlpha})`;
                 ctx.fillRect(0,0,320,320);
             }
-        } else {
-            ctx.drawImage(imgFundo, 0, 0, 320, 250); // Fundo
-            ctx.fillStyle = "#4a3528"; ctx.fillRect(0, 250, 320, 70); // Chão
-            
-            // Desenhar Buracos
-            ctx.fillStyle = "#1a1a1a";
-            holes.forEach(h => ctx.fillRect(h.x, 250, h.w, 70));
-            
-            // Desenhar Espinhos (Triângulos)
-            ctx.fillStyle = "green";
-            spikes.forEach(s => {
-                ctx.beginPath(); ctx.moveTo(s.x, 250); ctx.lineTo(s.x+s.w/2, 230); ctx.lineTo(s.x+s.w, 250); ctx.fill();
-            });
-
+        } else if (gameState === "playing") {
+            ctx.drawImage(imgFundo, 0, 0, 320, 250);
+            ctx.fillStyle = "#4a3528"; ctx.fillRect(0, 250, 320, 70);
             ctx.drawImage(partnerImg, partner.x, partner.y, partner.w, partner.h);
             ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
         }
