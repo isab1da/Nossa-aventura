@@ -5,62 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nossa Aventura</title>
     <style>
+        :root { --gb-body: #9e9e9e; --gb-screen: #8bac0f; --gb-dark: #2c3e50; --gb-accent: #9b2c5e; }
         body { background: #1a1a1a; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
-        #game-container { position: relative; width: 320px; height: 320px; border: 5px solid #333; overflow: hidden; background: #000; }
+        
+        /* Design do Gameboy mais bonitinho */
+        #game-console { background: var(--gb-body); padding: 20px; border-radius: 10px 10px 60px 10px; box-shadow: 10px 10px 0px #555; border: 4px solid #333; }
+        #game-container { position: relative; width: 320px; height: 320px; border: 15px solid #333; overflow: hidden; background: #000; border-radius: 5px; }
         canvas { display: block; image-rendering: pixelated; }
         
-        /* Balão de Fala da Intro */
-        #intro-dialog { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: white; border: 2px solid black; padding: 8px; width: 80%; font-size: 12px; display: none; z-index: 5; border-radius: 5px; text-align: center; }
+        /* Balão de Fala Inferior */
+        #dialog-ui { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.95); border: 3px solid black; padding: 10px; width: 85%; min-height: 60px; font-size: 13px; display: none; z-index: 15; box-sizing: border-box; }
+        #dialog-name { font-weight: bold; color: var(--gb-accent); margin-bottom: 4px; display: block; }
+        #next-indicator { position: absolute; right: 5px; bottom: 2px; font-size: 10px; animation: blink 1s infinite; }
 
-        /* Camada de UI Final e Diálogos do Jogo */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; background: rgba(0,0,0,0.8); color: white; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; text-align: center; z-index: 10; }
-        .choice-btn { background: white; color: black; border: none; padding: 10px; margin: 5px; width: 95%; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 14px; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Controles Estilizados */
+        #controls { width: 350px; height: 180px; position: relative; margin-top: 10px; }
+        .d-pad { position: absolute; left: 30px; top: 40px; width: 90px; height: 90px; }
+        .arrow { background: #333; border: none; color: #111; width: 30px; height: 30px; position: absolute; font-size: 18px; box-shadow: 2px 2px 0px #111; }
+        #btnLeft { left: 0; top: 30px; border-radius: 3px 0 0 3px; color: #555; }
+        #btnRight { right: 0; top: 30px; border-radius: 0 3px 3px 0; color: #555; }
         
-        #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 20; }
-        #start-btn { padding: 15px 30px; font-size: 18px; background: #9b2c5e; color: white; border: none; border-radius: 10px; cursor: pointer; }
+        .action-btns { position: absolute; right: 30px; top: 30px; transform: rotate(-25deg); }
+        .btn-circle { width: 50px; height: 50px; border-radius: 50%; border: none; color: rgba(0,0,0,0.3); font-weight: bold; font-size: 20px; margin-left: 10px; box-shadow: 3px 3px 0px #6b1d41; cursor: pointer; }
+        #btnA { background: var(--gb-accent); }
+        #btnB { background: #444; box-shadow: 3px 3px 0px #222; }
 
-        #controls { width: 320px; height: 180px; background: #2c3e50; position: relative; border-radius: 0 0 20px 20px; }
-        .d-pad { position: absolute; left: 20px; top: 40px; width: 100px; height: 100px; }
-        .arrow { background: #444; border: none; color: white; width: 45px; height: 45px; position: absolute; font-size: 20px; }
-        #btnLeft { left: 0; top: 25px; }
-        #btnRight { right: 0; top: 25px; }
-        .action-btns { position: absolute; right: 20px; top: 40px; }
-        .btn-circle { width: 60px; height: 60px; border-radius: 50%; border: none; color: white; font-weight: bold; font-size: 20px; margin-left: 5px; }
-        #btnA { background: #9b2c5e; }
-        #btnB { background: #444; }
+        #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 30; }
+        #start-btn { padding: 15px 30px; font-size: 18px; background: var(--gb-accent); color: white; border: none; border-radius: 5px; cursor: pointer; font-family: inherit; }
     </style>
 </head>
 <body>
 
+<div id="game-console">
     <div id="game-container">
-        <div id="start-overlay"><button id="start-btn">INICIAR HISTÓRIA</button></div>
-        <div id="intro-dialog"></div>
+        <div id="start-overlay"><button id="start-btn">INICIAR AVENTURA</button></div>
+        <div id="dialog-ui">
+            <span id="dialog-name"></span>
+            <span id="dialog-content"></span>
+            <div id="next-indicator">Pressione A ▶</div>
+        </div>
         <canvas id="gameCanvas" width="320" height="320"></canvas>
-        <div id="ui-layer">
-            <p id="dialog-text"></p>
-            <div id="choices"></div>
-        </div>
     </div>
+</div>
 
-    <div id="controls">
-        <div class="d-pad">
-            <button class="arrow" id="btnLeft">◀</button>
-            <button class="arrow" id="btnRight">▶</button>
-        </div>
-        <div class="action-btns">
-            <button class="btn-circle" id="btnB">B</button>
-            <button class="btn-circle" id="btnA">A</button>
-        </div>
-    </div>
+<div id="controls">
+    <div class="d-pad"><button class="arrow" id="btnLeft">◀</button><button class="arrow" id="btnRight">▶</button></div>
+    <div class="action-btns"><button class="btn-circle" id="btnB">B</button><button class="btn-circle" id="btnA">A</button></div>
+</div>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const uiLayer = document.getElementById('ui-layer');
-    const introDialog = document.getElementById('intro-dialog');
+    const dialogUI = document.getElementById('dialog-ui');
+    const dName = document.getElementById('dialog-name');
+    const dContent = document.getElementById('dialog-content');
     const startOverlay = document.getElementById('start-overlay');
 
-    let gameState = "start_screen";
+    let gameState = "wait_start";
     let transitionAlpha = 0;
     let introStep = 0;
 
@@ -69,34 +72,31 @@
     const playerImg = new Image(); playerImg.src = 'Ele_frente.PNG';
     const partnerImg = new Image(); partnerImg.src = 'Ela_frente.PNG';
 
-    let pIntro = { x: -50, y: 180, w: 30, h: 50 }; // Você entrando
-    let eIntro = { x: 200, y: 180, w: 30, h: 50 }; // Ele no PC
+    // Personagens grandes na intro (escondendo pernas)
+    let pIntro = { x: -100, y: 120, w: 140, h: 240 }; 
+    let eIntro = { x: 140, y: 120, w: 140, h: 240 }; 
     let player = { x: 20, y: 190, w: 35, h: 60, velY: 0, isJumping: false };
     let partner = { x: 270, y: 190, w: 35, h: 60 };
 
     const dialogos = [
-        { nome: "Ele", texto: "Oi amor, já to quase acabando o jogo..." },
-        { nome: "Eu", texto: "Posso jogar com você?" },
-        { nome: "Ele", texto: "Eu só queria finalizar essa parte sozinho..." },
-        { nome: "Eu", texto: "Ah, por favor! Então eu controlo o teclado e, você, o mouse 🥹" },
-        { nome: "Ele", texto: "... acho que isso não vai dar certo, amor" },
-        { nome: "Eu", texto: "Vai sim! Só vou apertar esse bot-" }
+        { nome: "Eder", texto: "Oi amor, já to quase acabando o jogo..." },
+        { nome: "Isabela", texto: "Posso jogar com você?" },
+        { nome: "Eder", texto: "Eu só queria finalizar essa parte sozinho..." },
+        { nome: "Isabela", texto: "Ah, por favor! Então eu controlo o teclado e, você, o mouse 🥹" },
+        { nome: "Eder", texto: "... acho que isso não vai dar certo, amor" },
+        { nome: "Isabela", texto: "Vai sim! Só vou apertar esse bot-" }
     ];
 
-    function iniciarCena() {
-        startOverlay.style.display = 'none';
-        gameState = "walking_in";
-    }
-
-    function proximoDialogo() {
-        if (introStep < dialogos.length) {
-            introDialog.style.display = 'block';
-            introDialog.innerText = `${dialogos[introStep].nome}: ${dialogos[introStep].texto}`;
-            introStep++;
-            setTimeout(proximoDialogo, 3000);
-        } else {
-            introDialog.style.display = 'none';
-            abducao();
+    function handleAButton() {
+        if (gameState === "dialogo_intro") {
+            if (introStep < dialogos.length) {
+                dName.innerText = dialogos[introStep].nome;
+                dContent.innerText = dialogos[introStep].texto;
+                introStep++;
+            } else {
+                dialogUI.style.display = 'none';
+                abducao();
+            }
         }
     }
 
@@ -112,29 +112,20 @@
         }, 50);
     }
 
-    document.getElementById('start-btn').onclick = iniciarCena;
-
-    function update() {
-        if (gameState === "walking_in") {
-            if (pIntro.x < 160) {
-                pIntro.x += 2;
-                partnerImg.src = 'Ela_direita.PNG';
-            } else {
-                partnerImg.src = 'Ela_frente.PNG';
-                gameState = "dialogo_intro";
-                proximoDialogo();
-            }
-        }
-    }
+    document.getElementById('start-btn').onclick = () => { startOverlay.style.display='none'; gameState="walking_in"; };
+    document.getElementById('btnA').onclick = handleAButton;
 
     function draw() {
         ctx.clearRect(0, 0, 320, 320);
-        
-        if (gameState === "start_screen" || gameState === "walking_in" || gameState === "dialogo_intro" || gameState === "transition") {
+        if (["walking_in", "dialogo_intro", "transition"].includes(gameState)) {
             ctx.drawImage(imgQuarto, 0, 0, 320, 320);
             ctx.drawImage(playerImg, eIntro.x, eIntro.y, eIntro.w, eIntro.h);
             ctx.drawImage(partnerImg, pIntro.x, pIntro.y, pIntro.w, pIntro.h);
             
+            if (gameState === "walking_in") {
+                if (pIntro.x < 30) pIntro.x += 3;
+                else { gameState = "dialogo_intro"; dialogUI.style.display = 'block'; handleAButton(); }
+            }
             if (gameState === "transition") {
                 ctx.fillStyle = `rgba(255,255,255,${transitionAlpha})`;
                 ctx.fillRect(0,0,320,320);
@@ -145,7 +136,6 @@
             ctx.drawImage(partnerImg, partner.x, partner.y, partner.w, partner.h);
             ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
         }
-        update();
         requestAnimationFrame(draw);
     }
     draw();
