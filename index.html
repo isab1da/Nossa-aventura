@@ -6,29 +6,32 @@
     <title>Nossa Aventura</title>
     <style>
         body { background: #1a1a1a; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
-        #game-container { position: relative; width: 320px; height: 320px; border: 5px solid #333; overflow: hidden; background: #87CEEB; }
+        #game-container { position: relative; width: 320px; height: 320px; border: 5px solid #333; overflow: hidden; background: #000; }
         canvas { display: block; image-rendering: pixelated; }
         
-        /* Interface de Diálogo */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; background: rgba(0,0,0,0.7); color: white; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; text-align: center; }
-        .choice-btn { background: white; color: black; border: none; padding: 10px; margin: 5px; width: 90%; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        /* UI e Diálogos */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; background: rgba(0,0,0,0.8); color: white; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; text-align: center; z-index: 10; }
+        .choice-btn { background: white; color: black; border: none; padding: 10px; margin: 5px; width: 95%; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 14px; }
         
-        /* Controles Estilo Gameboy */
-        #controls { width: 320px; height: 200px; background: #2c3e50; position: relative; border-radius: 0 0 20px 20px; }
-        .d-pad { position: absolute; left: 20px; top: 50px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; }
-        .arrow { background: #444; border: none; color: white; width: 40px; height: 40px; position: absolute; }
-        #btnLeft { left: 0; top: 30px; }
-        #btnRight { right: 0; top: 30px; }
-        
+        #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 20; }
+        #start-btn { padding: 15px 30px; font-size: 18px; background: #9b2c5e; color: white; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; }
+
+        /* Controles */
+        #controls { width: 320px; height: 180px; background: #2c3e50; position: relative; border-radius: 0 0 20px 20px; }
+        .d-pad { position: absolute; left: 20px; top: 40px; width: 100px; height: 100px; }
+        .arrow { background: #444; border: none; color: white; width: 45px; height: 45px; position: absolute; font-size: 20px; }
+        #btnLeft { left: 0; top: 25px; }
+        #btnRight { right: 0; top: 25px; }
         .action-btns { position: absolute; right: 20px; top: 40px; }
-        .btn-circle { width: 60px; height: 60px; border-radius: 50%; border: none; color: white; font-weight: bold; font-size: 20px; margin-left: 10px; }
-        #btnA { background: #9b2c5e; } /* Interagir */
-        #btnB { background: #444; }    /* Pular */
+        .btn-circle { width: 60px; height: 60px; border-radius: 50%; border: none; color: white; font-weight: bold; font-size: 20px; margin-left: 5px; }
+        #btnA { background: #9b2c5e; }
+        #btnB { background: #444; }
     </style>
 </head>
 <body>
 
     <div id="game-container">
+        <div id="start-overlay"><button id="start-btn">ENTRAR NO JOGO</button></div>
         <canvas id="gameCanvas" width="320" height="320"></canvas>
         <div id="ui-layer">
             <p id="dialog-text"></p>
@@ -53,32 +56,77 @@
     const uiLayer = document.getElementById('ui-layer');
     const dialogText = document.getElementById('dialog-text');
     const choicesContainer = document.getElementById('choices');
+    const startOverlay = document.getElementById('start-overlay');
 
-    // Estado do Jogo
-    let gameState = "playing"; // playing, dialog, end
-    const gravity = 0.8;
-    
-    // Personagens
-    let player = {
-        x: 30, y: 180, w: 45, h: 80, 
-        velX: 0, velY: 0, 
-        isJumping: false,
-        img: new Image(),
-        dir: 'frente'
-    };
-    player.img.src = 'Ele_frente.PNG';
+    let gameState = "intro";
+    let transitionAlpha = 0;
 
-    let partner = { x: 240, y: 180, w: 45, h: 80, img: new Image() };
-    partner.img.src = 'Ela_frente.PNG';
+    // Carregamento de Imagens
+    const imgQuarto = new Image(); imgQuarto.src = 'quarto.png';
+    const imgFundo = new Image(); imgFundo.src = 'fundo_aventura.png';
+    const playerImg = new Image(); playerImg.src = 'Ele_frente.PNG';
+    const partnerImg = new Image(); partnerImg.src = 'Ela_frente.PNG';
 
-    // Movimentação
+    // Configurações Físicas
+    let player = { x: 140, y: 180, w: 25, h: 45, velX: 0, velY: 0, isJumping: false };
+    let partner = { x: 170, y: 180, w: 25, h: 45 };
+    const gravity = 0.6;
+    const floorY = 250;
     const keys = { left: false, right: false };
 
+    // Obstáculos (x, largura)
+    const spikes = [{x: 120, w: 30}];
+    const holes = [{x: 180, w: 40}];
+
+    function startAbduction() {
+        gameState = "transition";
+        startOverlay.style.display = 'none';
+        let flash = setInterval(() => {
+            transitionAlpha += 0.05;
+            if (transitionAlpha >= 1) {
+                clearInterval(flash);
+                setupAdventure();
+            }
+        }, 50);
+    }
+
+    function setupAdventure() {
+        gameState = "playing";
+        player = { x: 20, y: floorY - 60, w: 35, h: 60, velX: 0, velY: 0, isJumping: false };
+        partner = { x: 270, y: floorY - 60, w: 35, h: 60 };
+        transitionAlpha = 0;
+    }
+
     function jump() {
-        if (!player.isJumping) {
-            player.velY = -12;
+        if (!player.isJumping && gameState === "playing") {
+            player.velY = -10;
             player.isJumping = true;
+            playerImg.src = 'Ele_frente.PNG';
         }
+    }
+
+    function checkCollision() {
+        // Buracos
+        holes.forEach(h => {
+            if (player.x + player.w > h.x && player.x < h.x + h.w && player.y >= floorY - 10) {
+                resetGame("Cuidado com o buraco! 😮");
+            }
+        });
+        // Espinhos
+        spikes.forEach(s => {
+            if (player.x + player.w > s.x && player.x < s.x + s.w && player.y + player.h > floorY - 10) {
+                resetGame("Ai! Espinhos! 🌵");
+            }
+        });
+        // Vitória
+        if (Math.abs(player.x - partner.x) < 30 && gameState === "playing") {
+            showDialog();
+        }
+    }
+
+    function resetGame(msg) {
+        alert(msg);
+        setupAdventure();
     }
 
     function showDialog() {
@@ -94,57 +142,64 @@
 
     function endGame(win) {
         choicesContainer.innerHTML = "";
-        if (win) {
-            dialogText.innerText = "E ELES VIVERAM FELIZES PARA SEMPRE... ❤️";
-        } else {
-            dialogText.innerText = "GAME OVER 💔";
-            setTimeout(() => location.reload(), 3000);
-        }
+        if (win) dialogText.innerText = "E ELES VIVERAM FELIZES PARA SEMPRE... ❤️";
+        else { dialogText.innerText = "GAME OVER 💔"; setTimeout(() => location.reload(), 2000); }
     }
 
-    // Controles Touch
-    document.getElementById('btnLeft').ontouchstart = () => { keys.left = true; player.img.src = 'Ele_esquerda.PNG'; };
-    document.getElementById('btnLeft').ontouchend = () => keys.left = false;
-    document.getElementById('btnRight').ontouchstart = () => { keys.right = true; player.img.src = 'Ele_direita.PNG'; };
-    document.getElementById('btnRight').ontouchend = () => keys.right = false;
+    // Controles
+    document.getElementById('start-btn').onclick = startAbduction;
     document.getElementById('btnB').onclick = jump;
-    document.getElementById('btnA').onclick = () => { if(Math.abs(player.x - partner.x) < 40) showDialog(); };
+    document.getElementById('btnLeft').ontouchstart = () => { keys.left = true; playerImg.src = 'Ele_esquerda.PNG'; };
+    document.getElementById('btnLeft').ontouchend = () => keys.left = false;
+    document.getElementById('btnRight').ontouchstart = () => { keys.right = true; playerImg.src = 'Ele_direita.PNG'; };
+    document.getElementById('btnRight').ontouchend = () => keys.right = false;
 
     function update() {
         if (gameState !== "playing") return;
-
         if (keys.left && player.x > 0) player.x -= 3;
-        if (keys.right && player.x < 275) player.x += 3;
-
-        // Gravidade
+        if (keys.right && player.x < 285) player.x += 3;
+        
         player.velY += gravity;
         player.y += player.velY;
-
-        if (player.y > 180) {
-            player.y = 180;
+        if (player.y > floorY - player.h) {
+            player.y = floorY - player.h;
             player.velY = 0;
             player.isJumping = false;
         }
-
-        // Se soltar os botões, volta a ficar de frente
-        if (!keys.left && !keys.right && !player.isJumping) player.img.src = 'Ele_frente.PNG';
+        if (!keys.left && !keys.right && !player.isJumping) playerImg.src = 'Ele_frente.PNG';
+        checkCollision();
     }
 
     function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Chão
-        ctx.fillStyle = '#6d4c41';
-        ctx.fillRect(0, 260, canvas.width, 60);
+        ctx.clearRect(0, 0, 320, 320);
+        if (gameState === "intro" || gameState === "transition") {
+            ctx.drawImage(imgQuarto, 0, 0, 320, 320);
+            ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
+            ctx.drawImage(partnerImg, partner.x, partner.y, partner.w, partner.h);
+            if (gameState === "transition") {
+                ctx.fillStyle = `rgba(255,255,255,${transitionAlpha})`;
+                ctx.fillRect(0,0,320,320);
+            }
+        } else {
+            ctx.drawImage(imgFundo, 0, 0, 320, 250); // Fundo
+            ctx.fillStyle = "#4a3528"; ctx.fillRect(0, 250, 320, 70); // Chão
+            
+            // Desenhar Buracos
+            ctx.fillStyle = "#1a1a1a";
+            holes.forEach(h => ctx.fillRect(h.x, 250, h.w, 70));
+            
+            // Desenhar Espinhos (Triângulos)
+            ctx.fillStyle = "green";
+            spikes.forEach(s => {
+                ctx.beginPath(); ctx.moveTo(s.x, 250); ctx.lineTo(s.x+s.w/2, 230); ctx.lineTo(s.x+s.w, 250); ctx.fill();
+            });
 
-        // Desenhar Personagens
-        ctx.drawImage(partner.img, partner.x, partner.y, partner.w, partner.h);
-        ctx.drawImage(player.img, player.x, player.y, player.w, player.h);
-
+            ctx.drawImage(partnerImg, partner.x, partner.y, partner.w, partner.h);
+            ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
+        }
         update();
         requestAnimationFrame(draw);
     }
-
     draw();
 </script>
 </body>
