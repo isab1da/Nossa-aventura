@@ -44,227 +44,244 @@
 </div>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const dialogUI = document.getElementById('dialog-ui');
-    const dName = document.getElementById('dialog-name');
-    const dContent = document.getElementById('dialog-content');
-    const instrBox = document.getElementById('instruction-box');
-    const optContainer = document.getElementById('container-opcoes'); // Adicione este ID se criar o container ou use o dContent
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const dialogUI = document.getElementById('dialog-ui');
+const dName = document.getElementById('dialog-name');
+const dContent = document.getElementById('dialog-content');
+const instrBox = document.getElementById('instruction-box');
 
-    let gameState = "wait";
-    let introStep = 0, transitionAlpha = 0, walkToggle = false, cameraX = 0;
-    let checkpointX = 50;
+let gameState = "wait";
+let introStep = 0, transitionAlpha = 0, walkToggle = false, cameraX = 0;
+let checkpointX = 50;
 
-    const imgQuarto = new Image(); imgQuarto.src = 'Quarto.PNG';
-    const imgFundo = new Image(); imgFundo.src = 'Fundo_aventura.PNG';
-    const imgEleFrente = new Image(); imgEleFrente.src = 'Ele_frente.PNG';
-    const imgFeia = new Image(); imgFeia.src = 'Feia.PNG';
-    const imgTaverna = new Image(); imgTaverna.src = 'Taverna.PNG';
-    const imgNeymar = new Image(); imgNeymar.src = 'Neymar.PNG';
-    
-    let sprEder = new Image(); sprEder.src = 'Ele_frente.PNG';
-    let sprIsabela = new Image(); sprIsabela.src = 'Ela_frente.PNG';
+// Imagens
+const imgQuarto = new Image(); imgQuarto.src = 'Quarto.PNG';
+const imgFundo = new Image(); imgFundo.src = 'Fundo_aventura.PNG';
+const imgEleFrente = new Image(); imgEleFrente.src = 'Ele_frente.PNG';
+const imgFeia = new Image(); imgFeia.src = 'Feia.PNG';
+const imgTaverna = new Image(); imgTaverna.src = 'Taverna.PNG';
+const imgNeymar = new Image(); imgNeymar.src = 'Neymar.PNG';
 
-    let eIntro = { x: 180, y: 150, w: 80, h: 140 }; 
-    let pIntro = { x: -80, y: 150, w: 80, h: 140 }; 
-    let player = { x: 50, y: 190, w: 35, h: 60, velY: 0, isJumping: false, dead: false };
-    let partner = { x: 4500, y: 190, w: 35, h: 60 }; // Isabela no final
-    let feia = { x: 2800, y: 180, w: 45, h: 75 };
-    let taverna = { x: 3500, y: 100, w: 200, h: 150 };
-    let neymar = { x: 4200, y: 180, w: 50, h: 75 };
+let sprEder = new Image(); sprEder.src = 'Ele_frente.PNG';
+let sprIsabela = new Image(); sprIsabela.src = 'Ela_frente.PNG';
 
-    const hazards = [
-        {type: 'spike', x: 600}, {type: 'hole', x: 1000, w: 80}, {type: 'spike', x: 1600},
-        {type: 'hole', x: 2100, w: 90}, {type: 'spike', x: 2500}
-    ];
+// Posições e Objetos
+let eIntro = { x: 180, y: 150, w: 80, h: 140 }; 
+let pIntro = { x: -80, y: 150, w: 80, h: 140 }; 
+let player = { x: 50, y: 190, w: 35, h: 60, velY: 0, isJumping: false, dead: false };
+let partner = { x: 5000, y: 190, w: 35, h: 60 }; 
+let feia = { x: 2800, y: 180, w: 45, h: 75 };
+let taverna = { x: 3500, y: 100, w: 200, h: 150 };
+let neymar = { x: 4500, y: 180, w: 50, h: 75, visivel: true };
 
-    const dialogosIntro = [
-        { n: "Eder", t: "Oi amor, já to quase acabando o jogo..." },
-        { n: "Isabela", t: "Posso jogar com você?" },
-        { n: "Eder", t: "Eu só queria finalizar essa parte sozinho..." },
-        { n: "Isabela", t: "Ah, por favor! Então eu controlo o teclado e, você, o mouse 🥹" },
-        { n: "Eder", t: "... acho que isso não vai dar certo, amor" },
-        { n: "Isabela", t: "Vai sim! Só vou apertar esse bot-" }
-    ];
+const hazards = [
+    {type: 'spike', x: 600}, {type: 'hole', x: 1000, w: 80}, {type: 'spike', x: 1600},
+    {type: 'hole', x: 2100, w: 90}, {type: 'spike', x: 2500}
+];
 
-    const dialogosAventura = [
-        { n: "Eder", t: "O que? Onde é que eu tô? 😨 E cade a Isabela?" },
-        { n: "Eder", t: "Espera, eu reconheço esse lugar... 🤨" },
-        { n: "Eder", t: "Eu - eu tô dentro do meu jogo! 😟" },
-        { n: "Eder", t: "Aquele botão que a Isabela apertou deve ter transportado a gente pra cá." },
-        { n: "Eder", t: "Mas onde será que ela foi parar..? 🤨" }
-    ];
+const dialogosIntro = [
+    { n: "Eder", t: "Oi amor, já to quase acabando o jogo..." },
+    { n: "Isabela", t: "Posso jogar com você?" },
+    { n: "Eder", t: "Eu só queria finalizar essa parte sozinho..." },
+    { n: "Isabela", t: "Ah, por favor! Então eu controlo o teclado e, você, o mouse 🥹" },
+    { n: "Eder", t: "... acho que isso não vai dar certo, amor" },
+    { n: "Isabela", t: "Vai sim! Só vou apertar esse bot-" }
+];
 
-    function iniciarCena() { document.getElementById('start-overlay').style.display='none'; gameState="walking_in"; }
+const dialogosAventura = [
+    { n: "Eder", t: "O que? Onde é que eu tô? 😨 E cade a Isabela?" },
+    { n: "Eder", t: "Espera, eu reconheço esse lugar... 🤨" },
+    { n: "Eder", t: "Eu - eu tô dentro do meu jogo! 😟" },
+    { n: "Eder", t: "Aquele botão que a Isabela apertou deve ter transportado a gente pra cá." },
+    { n: "Eder", t: "Mas onde será que ela foi parar..? 🤨" }
+];
 
-    function avancarDialogo() {
-        if (gameState === "dialogo_intro") {
-            if (introStep < dialogosIntro.length) {
-                dName.innerText = dialogosIntro[introStep].n; dContent.innerText = dialogosIntro[introStep].t; introStep++;
-            } else { dialogUI.style.display='none'; abducao(); }
-        } else if (gameState === "dialogo_aventura") {
-            if (introStep < dialogosAventura.length) {
-                dName.innerText = dialogosAventura[introStep].n; dContent.innerText = dialogosAventura[introStep].t; introStep++;
-            } else { 
-                dialogUI.style.display='none'; instrBox.style.display='block'; instrBox.innerText = "Ache a Isabela! Explore o ambiente.";
-                setTimeout(() => { instrBox.style.display='none'; gameState="playing"; }, 3000);
-            }
-        } else if (gameState === "final_feliz") {
-             dialogUI.style.display='none';
-             instrBox.style.display='block';
-             instrBox.style.background = "pink";
-             instrBox.innerText = "Juntos, Isabela e Eder conseguiram escapar do jogo e voltar ao mundo real. E viveram felizes para sempre! -> FIM DE JOGO";
+function iniciarCena() { document.getElementById('start-overlay').style.display='none'; gameState="walking_in"; }
+
+function avancarDialogo() {
+    if (gameState === "dialogo_intro") {
+        if (introStep < dialogosIntro.length) {
+            dName.innerText = dialogosIntro[introStep].n; dContent.innerText = dialogosIntro[introStep].t; introStep++;
+        } else { dialogUI.style.display='none'; abducao(); }
+    } else if (gameState === "dialogo_aventura") {
+        if (introStep < dialogosAventura.length) {
+            dName.innerText = dialogosAventura[introStep].n; dContent.innerText = dialogosAventura[introStep].t; introStep++;
+        } else { 
+            dialogUI.style.display='none'; instrBox.style.display='block'; instrBox.innerText = "Ache a Isabela! Explore o ambiente.";
+            setTimeout(() => { instrBox.style.display='none'; gameState="playing"; }, 3000);
         }
+    } else if (gameState === "final_jogo") {
+        dialogUI.style.display='none';
+        instrBox.style.display='block'; instrBox.style.background = "#ffd700";
+        instrBox.innerText = "Juntos, Isabela e Eder conseguiram escapar do jogo e voltar ao mundo real. E viveram felizes para sempre! -> FIM DE JOGO";
     }
+}
 
-    function abducao() {
-        gameState = "transition";
-        let flash = setInterval(() => {
-            transitionAlpha += 0.05;
-            if (transitionAlpha >= 1) {
-                clearInterval(flash); gameState = "dialogo_aventura"; introStep = 0; transitionAlpha = 0;
-                dialogUI.style.display = 'block'; avancarDialogo();
-            }
-        }, 50);
-    }
-
-    function resetPlayer() {
-        player.dead = true;
-        setTimeout(() => {
-            player.x = checkpointX; player.y = 190; player.velY = 0; player.dead = false;
-        }, 500);
-    }
-
-    // LÓGICA DAS ESCOLHAS DA TAVERNA
-    function escolherTaverna(opcao) {
-        if (opcao === 'A') {
-            dialogUI.style.display = 'none';
-            player.dead = true;
-            instrBox.style.display = 'block';
-            instrBox.style.background = "red"; instrBox.style.color = "white";
-            instrBox.innerText = "GAME OVER! Você me odeia??";
-            setTimeout(() => { instrBox.style.display='none'; resetPlayer(); gameState="playing"; }, 4000);
-        } else if (opcao === 'B') {
-            dialogUI.style.display = 'none';
-            gameState = "playing";
-            player.x += 150; // Pula a taverna
-        } else if (opcao === 'C') {
-            gameState = "encontro_isabela";
-            dContent.innerHTML = "Você realmente conhece sua amada! O cheiro do doce parece atrair Isabela até você!";
-            setTimeout(() => {
-                // Isabela entra da direita
-                let intervaloIsa = setInterval(() => {
-                    partner.x -= 3;
-                    walkToggle = !walkToggle;
-                    if(partner.x <= player.x + 60) {
-                        clearInterval(intervaloIsa);
-                        dName.innerText = "Isabela";
-                        dContent.innerHTML = "Amor! Nem acredito que é você!<br><b>Eder:</b> Finalmente te achei! E adivinha? Ainda comprei um docinho pra gente comemorar 🥰<br><b>Isabela:</b> Onww!! Te amo muito, mô! E prometo não te atrapalhar mais enquanto vc joga 😅";
-                        gameState = "final_feliz";
-                    }
-                }, 50);
-            }, 2000);
+function abducao() {
+    gameState = "transition";
+    let flash = setInterval(() => {
+        transitionAlpha += 0.05;
+        if (transitionAlpha >= 1) {
+            clearInterval(flash); gameState = "dialogo_aventura"; introStep = 0; transitionAlpha = 0;
+            dialogUI.style.display = 'block'; avancarDialogo();
         }
-    }
+    }, 50);
+}
 
-    document.getElementById('btnA').onclick = () => {
-        if(gameState === "playing" && Math.abs(player.x - feia.x) < 50) {
-            gameState = "game_over_ciumes";
-            instrBox.style.display = 'block';
-            instrBox.style.background = "red"; instrBox.style.color = "white";
-            instrBox.innerText = "GAME OVER! Por acaso essa parece a Isabela pra vc?? Quem te autorizou a falar com qualquer rapariga na rua?!";
+function resetPlayer() {
+    player.dead = true;
+    setTimeout(() => {
+        player.x = checkpointX; player.y = 190; player.velY = 0; player.dead = false;
+    }, 500);
+}
+
+// LOGICA TAVERNA
+function escolherTaverna(opcao) {
+    if (opcao === 'A') {
+        dialogUI.style.display = 'none';
+        instrBox.style.display = 'block'; instrBox.style.background = "red"; instrBox.style.color = "white";
+        instrBox.innerText = "GAME OVER! Você me odeia??";
+        setTimeout(() => { location.reload(); }, 4000);
+    } else if (opcao === 'B') {
+        dialogUI.style.display = 'none'; gameState = "playing"; player.x += 100;
+    } else if (opcao === 'C') {
+        dialogUI.style.display = 'block'; dName.innerText = "";
+        dContent.innerText = "Você realmente conhece sua amada! O cheiro do doce parece atrair Isabela até você!";
+        setTimeout(() => { aparecerIsabela("C"); }, 2000);
+    }
+}
+
+// LOGICA NEYMAR
+function escolherNeymar(opcao) {
+    if (opcao === 'X') {
+        dialogUI.style.display = 'none';
+        instrBox.style.display = 'block'; instrBox.style.background = "red"; instrBox.style.color = "white";
+        instrBox.innerText = "GAME OVER! Jura? Espero que tenha clicado errado....";
+        setTimeout(() => { location.reload(); }, 4000);
+    } else if (opcao === 'Y') {
+        dContent.innerText = "Antes que você possa dar a bicuda, Neymar se joga no chão aos prantos. Isabela escuta o choro de longe e corre ao seu encontro.";
+        neymar.visivel = false;
+        setTimeout(() => { aparecerIsabela("Y"); }, 3000);
+    } else if (opcao === 'Z') {
+        dialogUI.style.display = 'none';
+        instrBox.style.display = 'block'; instrBox.innerText = "Com foco e determinação, você segue em busca de sua amada.";
+        setTimeout(() => { 
+            instrBox.style.display = 'none'; gameState = "playing"; 
+            partner.x = player.x + 400; // Isabela aparece logo a frente
+        }, 2500);
+    }
+}
+
+function aparecerIsabela(tipo) {
+    gameState = "encontro_final";
+    partner.x = player.x + 300;
+    let intervalo = setInterval(() => {
+        partner.x -= 3; walkToggle = !walkToggle;
+        if(partner.x <= player.x + 50) {
+            clearInterval(intervalo);
+            dialogUI.style.display = 'block'; dName.innerText = "Isabela";
+            if(tipo === "C") {
+                dContent.innerHTML = "Amor! Nem acredito que é você!<br><b>Eder:</b> Finalmente te achei! Ainda comprei um docinho 🥰<br><b>Isabela:</b> Te amo, mô! E prometo não atrapalhar mais!";
+            } else if(tipo === "Y") {
+                dContent.innerHTML = "<b>Eder:</b> Amor! Nem acredito que te encontrei!<br><b>Isabela:</b> Nem eu! Ainda bem que o Neymar fez aquele escândalo 🥹<br><b>Eder:</b> Infelizmente vamos continuar pobres, mas estamos juntos!";
+            } else {
+                dContent.innerHTML = "<b>Eder:</b> Amor! Nem acredito que te encontrei!<br><b>Isabela:</b> Nem eu! Agora podemos sair daqui! 🤩";
+            }
+            gameState = "final_jogo";
+        }
+    }, 50);
+}
+
+document.getElementById('btnA').onclick = () => {
+    if(gameState === "playing") {
+        if(Math.abs(player.x - feia.x) < 50) {
+            gameState = "game_over_ciumes"; instrBox.style.display = 'block'; instrBox.style.background = "red";
+            instrBox.innerText = "GAME OVER! Por acaso essa parece a Isabela pra vc??";
             setTimeout(() => { location.reload(); }, 5000);
-        } else if (gameState === "playing" && Math.abs(player.x - taverna.x - 100) < 100) {
-            gameState = "menu_taverna";
-            dialogUI.style.display = 'block';
-            dName.innerText = "Taverna Nova Opção";
-            dContent.innerHTML = `Escolha uma opção:<br>
-                <div onclick="escolherTaverna('A')" style="cursor:pointer; border:1px solid black; margin:2px;">A) Só umazinha 🍻</div>
-                <div onclick="escolherTaverna('B')" style="cursor:pointer; border:1px solid black; margin:2px;">B) Passo longe! ♥️</div>
-                <div onclick="escolherTaverna('C')" style="cursor:pointer; border:1px solid black; margin:2px;">C) Comprar um docinho 🍫</div>`;
+        } else if (Math.abs(player.x - taverna.x - 100) < 100) {
+            gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Taverna";
+            dContent.innerHTML = `<div onclick="escolherTaverna('A')">A) Só umazinha 🍻</div><div onclick="escolherTaverna('B')">B) Passo longe! ♥️</div><div onclick="escolherTaverna('C')">C) Comprar docinho 🍫</div>`;
+        } else if (Math.abs(player.x - neymar.x) < 60 && neymar.visivel) {
+            gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Neymar";
+            dContent.innerHTML = `Fala mano, blz? Se me ajudar, te coloco como herdeiro!<br>
+                <div onclick="escolherNeymar('X')">X) Claro que ajudo!!</div><div onclick="escolherNeymar('Y')">Y) Dar bicuda no traíra!</div><div onclick="escolherNeymar('Z')">Z) A patroa primeiro.</div>`;
+        } else if (Math.abs(player.x - partner.x) < 60 && gameState !== "final_jogo") {
+             aparecerIsabela("Z");
         } else { avancarDialogo(); }
-    };
+    } else { avancarDialogo(); }
+};
 
-    document.getElementById('btnB').onclick = () => { if(gameState === "playing" && !player.isJumping && !player.dead) { player.velY = -12; player.isJumping = true; } };
+document.getElementById('btnB').onclick = () => { if(gameState === "playing" && !player.isJumping && !player.dead) { player.velY = -12; player.isJumping = true; } };
 
-    let keys = { L: false, R: false };
-    document.getElementById('btnLeft').ontouchstart = (e) => { e.preventDefault(); keys.L = true; };
-    document.getElementById('btnLeft').ontouchend = () => keys.L = false;
-    document.getElementById('btnRight').ontouchstart = (e) => { e.preventDefault(); keys.R = true; };
-    document.getElementById('btnRight').ontouchend = () => keys.R = false;
+let keys = { L: false, R: false };
+document.getElementById('btnLeft').ontouchstart = (e) => { e.preventDefault(); keys.L = true; };
+document.getElementById('btnLeft').ontouchend = () => keys.L = false;
+document.getElementById('btnRight').ontouchstart = (e) => { e.preventDefault(); keys.R = true; };
+document.getElementById('btnRight').ontouchend = () => keys.R = false;
 
-    setInterval(() => { if(keys.L || keys.R || gameState === "walking_in") walkToggle = !walkToggle; }, 200);
+setInterval(() => { if(keys.L || keys.R || gameState === "walking_in" || gameState === "encontro_final") walkToggle = !walkToggle; }, 200);
 
-    function draw() {
-        ctx.clearRect(0, 0, 320, 320);
-        if (["walking_in", "dialogo_intro", "transition"].includes(gameState)) {
-            ctx.drawImage(imgQuarto, 0, 0, 320, 320);
-            ctx.drawImage(imgEleFrente, eIntro.x, eIntro.y, eIntro.w, eIntro.h);
-            if (gameState === "walking_in") {
-                sprIsabela.src = walkToggle ? 'Ela_andando_direita.PNG' : 'Ela_direita.PNG';
-                if (pIntro.x < 60) pIntro.x += 2; else { gameState = "dialogo_intro"; dialogUI.style.display = 'block'; avancarDialogo(); }
-            } else sprIsabela.src = 'Ela_frente.PNG';
-            ctx.drawImage(sprIsabela, pIntro.x, pIntro.y, pIntro.w, pIntro.h);
-            if (gameState === "transition") { ctx.fillStyle = `rgba(255,255,255,${transitionAlpha})`; ctx.fillRect(0,0,320,320); }
-        } 
-        else if (gameState === "dialogo_aventura" || gameState === "playing" || gameState === "game_over_ciumes" || gameState === "menu_taverna" || gameState === "encontro_isabela" || gameState === "final_feliz") {
-            cameraX = player.x - 80; if(cameraX < 0) cameraX = 0;
-            ctx.drawImage(imgFundo, -(cameraX * 0.1) % 320, 0, 640, 250); 
-            ctx.save(); ctx.translate(-cameraX, 0); 
-            ctx.fillStyle = "#4a3528"; ctx.fillRect(cameraX, 250, 320, 70); 
+function draw() {
+    ctx.clearRect(0, 0, 320, 320);
+    if (["walking_in", "dialogo_intro", "transition"].includes(gameState)) {
+        ctx.drawImage(imgQuarto, 0, 0, 320, 320);
+        ctx.drawImage(imgEleFrente, eIntro.x, eIntro.y, eIntro.w, eIntro.h);
+        if (gameState === "walking_in") {
+            sprIsabela.src = walkToggle ? 'Ela_andando_direita.PNG' : 'Ela_direita.PNG';
+            if (pIntro.x < 60) pIntro.x += 2; else { gameState = "dialogo_intro"; dialogUI.style.display = 'block'; avancarDialogo(); }
+        } else sprIsabela.src = 'Ela_frente.PNG';
+        ctx.drawImage(sprIsabela, pIntro.x, pIntro.y, pIntro.w, pIntro.h);
+        if (gameState === "transition") { ctx.fillStyle = `rgba(255,255,255,${transitionAlpha})`; ctx.fillRect(0,0,320,320); }
+    } 
+    else {
+        cameraX = player.x - 80; if(cameraX < 0) cameraX = 0;
+        ctx.drawImage(imgFundo, -(cameraX * 0.1) % 320, 0, 640, 250); 
+        ctx.save(); ctx.translate(-cameraX, 0); 
+        ctx.fillStyle = "#4a3528"; ctx.fillRect(cameraX, 250, 320, 70); 
 
-            // Checkpoint (Plaquinha)
-            ctx.fillStyle = "brown"; ctx.fillRect(2950, 210, 5, 40); ctx.fillRect(2930, 210, 40, 20);
-            ctx.fillStyle = "white"; ctx.font = "10px Arial"; ctx.fillText("CHECK", 2935, 223);
-            if(player.x > 2950) checkpointX = 2950;
+        // Checkpoint
+        ctx.fillStyle = "brown"; ctx.fillRect(2950, 210, 5, 40); ctx.fillRect(2930, 210, 40, 20);
+        ctx.fillStyle = "white"; ctx.font = "10px Arial"; ctx.fillText("CHECK", 2935, 223);
+        if(player.x > 2950) checkpointX = 2950;
 
-            hazards.forEach(h => {
-                if(h.type === 'spike') {
-                    ctx.fillStyle = "green"; ctx.beginPath(); ctx.moveTo(h.x, 250); ctx.lineTo(h.x+20, 220); ctx.lineTo(h.x+40, 250); ctx.fill();
-                    if(!player.dead && player.x+20 > h.x && player.x < h.x+20 && player.y > 170) resetPlayer();
-                } else {
-                    ctx.fillStyle = "#000"; ctx.fillRect(h.x, 250, h.w, 70);
-                    if(!player.dead && player.x+15 > h.x && player.x+15 < h.x+h.w && player.y >= 190 && !player.isJumping) resetPlayer();
-                }
-            });
-
-            ctx.drawImage(imgFeia, feia.x, feia.y, feia.w, feia.h);
-            
-            // Desenhar Taverna
-            ctx.drawImage(imgTaverna, taverna.x, taverna.y, taverna.w, taverna.h);
-
-            // Desenhar Neymar (Aparece se passar da Taverna)
-            if(player.x > taverna.x + 200) {
-                ctx.drawImage(imgNeymar, neymar.x, neymar.y, neymar.w, neymar.h);
+        hazards.forEach(h => {
+            if(h.type === 'spike') {
+                ctx.fillStyle = "green"; ctx.beginPath(); ctx.moveTo(h.x, 250); ctx.lineTo(h.x+20, 220); ctx.lineTo(h.x+40, 250); ctx.fill();
+                if(!player.dead && player.x+20 > h.x && player.x < h.x+20 && player.y > 170) resetPlayer();
+            } else {
+                ctx.fillStyle = "#000"; ctx.fillRect(h.x, 250, h.w, 70);
+                if(!player.dead && player.x+15 > h.x && player.x+15 < h.x+h.w && player.y >= 190 && !player.isJumping) resetPlayer();
             }
+        });
 
-            // Desenhar Isabela (Caminho C)
-            if(gameState === "encontro_isabela" || gameState === "final_feliz") {
-                sprIsabela.src = walkToggle ? 'Ela_andando_esquerda.PNG' : 'Ela_esquerda.PNG';
-                ctx.drawImage(sprIsabela, partner.x, partner.y, player.w, player.h);
-            }
+        ctx.drawImage(imgFeia, feia.x, feia.y, feia.w, feia.h);
+        ctx.drawImage(imgTaverna, taverna.x, taverna.y, taverna.w, taverna.h);
+        if(neymar.visivel) ctx.drawImage(imgNeymar, neymar.x, neymar.y, neymar.w, neymar.h);
 
-            if(Math.abs(player.x - taverna.x - 100) < 100 && gameState === "playing") {
-                ctx.fillStyle = "white"; ctx.fillText("Aperte A para entrar", taverna.x + 50, taverna.y - 10);
-            }
-
-            if (keys.L) sprEder.src = walkToggle ? 'Ele_andando_esquerda.PNG' : 'Ele_esquerda.PNG';
-            else if (keys.R) sprEder.src = walkToggle ? 'Ele_andando_direita.PNG' : 'Ele_direita.PNG';
-            else sprEder.src = 'Ele_frente.PNG';
-
-            if (gameState === "playing" && !player.dead) {
-                if (keys.L && player.x > cameraX) player.x -= 4;
-                if (keys.R) player.x += 4;
-                player.velY += 0.7; player.y += player.velY;
-                if (player.y > 190) { player.y = 190; player.velY = 0; player.isJumping = false; }
-            }
-            ctx.drawImage(sprEder, player.x, player.y, player.w, player.h);
-            ctx.restore();
+        // Desenhar Isabela se for encontro final ou Opção Z
+        if(gameState === "encontro_final" || (player.x > neymar.x && !neymar.visivel) || partner.x < 6000) {
+            sprIsabela.src = walkToggle ? 'Ela_andando_esquerda.PNG' : 'Ela_esquerda.PNG';
+            ctx.drawImage(sprIsabela, partner.x, partner.y, player.w, player.h);
         }
-        requestAnimationFrame(draw);
+
+        if (gameState === "playing" && !player.dead) {
+            if (keys.L && player.x > cameraX) player.x -= 4;
+            if (keys.R) player.x += 4;
+            player.velY += 0.7; player.y += player.velY;
+            if (player.y > 190) { player.y = 190; player.velY = 0; player.isJumping = false; }
+        }
+
+        if (keys.L) sprEder.src = walkToggle ? 'Ele_andando_esquerda.PNG' : 'Ele_esquerda.PNG';
+        else if (keys.R) sprEder.src = walkToggle ? 'Ele_andando_direita.PNG' : 'Ele_direita.PNG';
+        else sprEder.src = 'Ele_frente.PNG';
+
+        ctx.drawImage(sprEder, player.x, player.y, player.w, player.h);
+        ctx.restore();
     }
-    draw();
+    requestAnimationFrame(draw);
+}
+draw();
 </script>
 </body>
 </html>
