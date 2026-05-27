@@ -107,14 +107,20 @@ function avancarDialogo() {
             dName.innerText = dialogosAventura[introStep].n; dContent.innerText = dialogosAventura[introStep].t; introStep++;
         } else { 
             dialogUI.style.display='none'; instrBox.style.display='block'; instrBox.innerText = "Ache a Isabela! Explore o ambiente.";
-            setTimeout(() => { instrBox.style.display='none'; gameState="playing"; }, 3000);
+            gameState = "instrucao_1";
         }
+    } else if (gameState === "instrucao_1") {
+        instrBox.innerText = "Aperte A para interagir com o cenário ou personagens.\nAperte B para pular.";
+        gameState = "instrucao_2";
+    } else if (gameState === "instrucao_2") {
+        instrBox.style.display='none'; gameState = "playing";
     } else if (gameState === "final_jogo") {
         dialogUI.style.display='none';
         instrBox.style.display='block'; instrBox.style.background = "#ffd700";
-        instrBox.innerText = "Juntos, Isabela e Eder conseguiram escapar do jogo e voltar ao mundo real. E viveram felizes para sempre! 🥰♥️";
+        instrBox.innerText = "Parabéns! Você encontrou sua amada! E como todo herói merece reconhecimento, recolha seu prêmio no mundo real. 🏆";
     }
 }
+
 
 function abducao() {
     gameState = "transition";
@@ -140,7 +146,7 @@ function escolherTaverna(opcao) {
         dialogUI.style.display = 'none';
         instrBox.style.display = 'block'; instrBox.style.background = "red"; instrBox.style.color = "white";
         instrBox.innerText = "GAME OVER! Você me odeia??";
-        setTimeout(() => { location.reload(); }, 4000);
+        setTimeout(() => { instrBox.style.display='none'; resetPlayer(); gameState = "playing"; }, 4000);
     } else if (opcao === 'B') {
         dialogUI.style.display = 'none'; gameState = "playing"; player.x += 100;
     } else if (opcao === 'C') {
@@ -156,7 +162,7 @@ function escolherNeymar(opcao) {
         dialogUI.style.display = 'none';
         instrBox.style.display = 'block'; instrBox.style.background = "red"; instrBox.style.color = "white";
         instrBox.innerText = "GAME OVER! Jura? Espero que tenha clicado errado....";
-        setTimeout(() => { location.reload(); }, 4000);
+        setTimeout(() => { instrBox.style.display='none'; resetPlayer(); gameState = "playing"; }, 4000);
     } else if (opcao === 'Y') {
         dContent.innerText = "Antes que você possa dar a bicuda, Neymar se joga no chão aos prantos. Isabela escuta o choro de longe e corre ao seu encontro.";
         neymar.visivel = false;
@@ -166,10 +172,11 @@ function escolherNeymar(opcao) {
         instrBox.style.display = 'block'; instrBox.innerText = "Com foco e determinação, você segue em busca de sua amada.";
         setTimeout(() => { 
             instrBox.style.display = 'none'; gameState = "playing"; 
-            partner.x = player.x + 400; // Isabela aparece logo a frente
+            partner.x = player.x + 400; 
         }, 2500);
     }
 }
+
 
 function aparecerIsabela(tipo) {
     gameState = "encontro_final";
@@ -202,7 +209,7 @@ document.getElementById('btnA').onclick = () => {
             dContent.innerHTML = `<div onclick="escolherTaverna('A')">A) Só umazinha 🍻</div><div onclick="escolherTaverna('B')">B) Passo longe! 😮‍💨</div><div onclick="escolherTaverna('C')">C) Comprar docinho 🍫</div>`;
         } else if (Math.abs(player.x - neymar.x) < 60 && neymar.visivel) {
             gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Neymar";
-            dContent.innerHTML = `Fala mano, blz? Se me ajudar, te coloco como herdeiro!<br>
+            dContent.innerHTML = `Fala mano, blz? Topa me ajudar pra eu te colocar como herdeiro?<br>
                 <div onclick="escolherNeymar('X')">X) Claro que ajudo!! 🐂</div><div onclick="escolherNeymar('Y')">Y) Dar bicuda no traíra! 🙏</div><div onclick="escolherNeymar('Z')">Z) A patroa primeiro. 🫡</div>`;
         } else if (Math.abs(player.x - partner.x) < 60 && gameState !== "final_jogo") {
              aparecerIsabela("Z");
