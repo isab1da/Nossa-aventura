@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -114,7 +112,7 @@ function avancarDialogo() {
     } else if (gameState === "final_jogo") {
         dialogUI.style.display='none';
         instrBox.style.display='block'; instrBox.style.background = "#ffd700";
-        instrBox.innerText = "Juntos, Isabela e Eder conseguiram escapar do jogo e voltar ao mundo real. E viveram felizes para sempre! -> FIM DE JOGO";
+        instrBox.innerText = "Juntos, Isabela e Eder conseguiram escapar do jogo e voltar ao mundo real. E viveram felizes para sempre! 🥰♥️";
     }
 }
 
@@ -182,9 +180,9 @@ function aparecerIsabela(tipo) {
             clearInterval(intervalo);
             dialogUI.style.display = 'block'; dName.innerText = "Isabela";
             if(tipo === "C") {
-                dContent.innerHTML = "Amor! Nem acredito que é você!<br><b>Eder:</b> Finalmente te achei! Ainda comprei um docinho 🥰<br><b>Isabela:</b> Te amo, mô! E prometo não atrapalhar mais!";
+                dContent.innerHTML = "Amor! Nem acredito que é você!<br><b>Eder:</b> Finalmente te achei! Ainda comprei um docinho 🥰<br><b>Isabela:</b> Te amo, mô! E prometo não atrapalhar mais o seu jogo! 😅";
             } else if(tipo === "Y") {
-                dContent.innerHTML = "<b>Eder:</b> Amor! Nem acredito que te encontrei!<br><b>Isabela:</b> Nem eu! Ainda bem que o Neymar fez aquele escândalo 🥹<br><b>Eder:</b> Infelizmente vamos continuar pobres, mas estamos juntos!";
+                dContent.innerHTML = "<b>Eder:</b> Amor! Nem acredito que te encontrei!<br><b>Isabela:</b> Nem eu! Ainda bem que o Neymar fez aquele escândalo 🥹<br><b>Eder:</b> Infelizmente vamos continuar pobres, mas pelo menos estamos juntos!";
             } else {
                 dContent.innerHTML = "<b>Eder:</b> Amor! Nem acredito que te encontrei!<br><b>Isabela:</b> Nem eu! Agora podemos sair daqui! 🤩";
             }
@@ -200,12 +198,12 @@ document.getElementById('btnA').onclick = () => {
             instrBox.innerText = "GAME OVER! Por acaso essa parece a Isabela pra vc??";
             setTimeout(() => { location.reload(); }, 5000);
         } else if (Math.abs(player.x - taverna.x - 100) < 100) {
-            gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Taverna";
-            dContent.innerHTML = `<div onclick="escolherTaverna('A')">A) Só umazinha 🍻</div><div onclick="escolherTaverna('B')">B) Passo longe! ♥️</div><div onclick="escolherTaverna('C')">C) Comprar docinho 🍫</div>`;
+            gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Taverna Nova Opção";
+            dContent.innerHTML = `<div onclick="escolherTaverna('A')">A) Só umazinha 🍻</div><div onclick="escolherTaverna('B')">B) Passo longe! </div><div onclick="escolherTaverna('C')">C) Comprar docinho 🍫</div>`;
         } else if (Math.abs(player.x - neymar.x) < 60 && neymar.visivel) {
             gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Neymar";
             dContent.innerHTML = `Fala mano, blz? Se me ajudar, te coloco como herdeiro!<br>
-                <div onclick="escolherNeymar('X')">X) Claro que ajudo!!</div><div onclick="escolherNeymar('Y')">Y) Dar bicuda no traíra!</div><div onclick="escolherNeymar('Z')">Z) A patroa primeiro.</div>`;
+                <div onclick="escolherNeymar('X')">X) Claro que ajudo!! 🐂</div><div onclick="escolherNeymar('Y')">Y) Dar bicuda no traíra! 🙏</div><div onclick="escolherNeymar('Z')">Z) A patroa primeiro. 🫡</div>`;
         } else if (Math.abs(player.x - partner.x) < 60 && gameState !== "final_jogo") {
              aparecerIsabela("Z");
         } else { avancarDialogo(); }
