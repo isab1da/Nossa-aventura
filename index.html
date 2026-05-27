@@ -199,7 +199,7 @@ document.getElementById('btnA').onclick = () => {
             setTimeout(() => { location.reload(); }, 5000);
         } else if (Math.abs(player.x - taverna.x - 100) < 100) {
             gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Taverna Nova Opção";
-            dContent.innerHTML = `<div onclick="escolherTaverna('A')">A) Só umazinha 🍻</div><div onclick="escolherTaverna('B')">B) Passo longe! </div><div onclick="escolherTaverna('C')">C) Comprar docinho 🍫</div>`;
+            dContent.innerHTML = `<div onclick="escolherTaverna('A')">A) Só umazinha 🍻</div><div onclick="escolherTaverna('B')">B) Passo longe! 😮‍💨</div><div onclick="escolherTaverna('C')">C) Comprar docinho 🍫</div>`;
         } else if (Math.abs(player.x - neymar.x) < 60 && neymar.visivel) {
             gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Neymar";
             dContent.innerHTML = `Fala mano, blz? Se me ajudar, te coloco como herdeiro!<br>
