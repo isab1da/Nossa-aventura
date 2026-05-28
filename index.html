@@ -5,28 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nossa Aventura</title>
     <style>
-        :root { --gb-body: #9e9e9e; --gb-accent: #9b2c5e; }
-        body { background: #1a1a1a; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
-        #game-console { background: var(--gb-body); padding: 20px; border-radius: 10px 10px 60px 10px; border: 4px solid #333; }
-        #game-container { position: relative; width: 320px; height: 320px; border: 15px solid #333; overflow: hidden; background: #000; }
+        :root { 
+            --gb-body: #0a0a12; /* Fundo escuro profundo */
+            --gb-accent: #ff00ff; /* Rosa Neon */
+            --gb-glow: #00ffff; /* Ciano Neon */
+            --gb-screen-border: #1a1a2e;
+        }
+        
+        body { 
+            background: #050505; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            overflow: hidden; 
+            font-family: 'Courier New', Courier, monospace; 
+        }
+        
+        /* Efeito de brilho no console */
+        #game-console { 
+            background: var(--gb-body); 
+            padding: 20px; 
+            border-radius: 10px 10px 60px 10px; 
+            border: 3px solid var(--gb-glow); 
+            box-shadow: 0 0 20px var(--gb-glow), inset 0 0 10px var(--gb-glow);
+            position: relative;
+        }
+
+        #game-container { 
+            position: relative; 
+            width: 320px; 
+            height: 320px; 
+            border: 15px solid var(--gb-screen-border); 
+            overflow: hidden; 
+            background: #000; 
+            box-shadow: inset 0 0 15px var(--gb-glow);
+        }
+
         canvas { display: block; image-rendering: pixelated; }
-        #dialog-ui { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: white; border: 3px solid black; padding: 10px; width: 85%; min-height: 60px; font-size: 11px; display: none; z-index: 15; box-sizing: border-box; }
-        #dialog-name { font-weight: bold; color: var(--gb-accent); margin-bottom: 4px; display: block; }
-        #instruction-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #ffd700; border: 3px solid #000; padding: 15px; width: 80%; text-align: center; display: none; z-index: 20; font-weight: bold; font-size: 12px;}
+
+        /* Interface de Diálogo Neon */
+        #dialog-ui { 
+            position: absolute; 
+            bottom: 10px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: rgba(10, 10, 18, 0.9); 
+            border: 2px solid var(--gb-accent); 
+            color: #fff;
+            padding: 10px; 
+            width: 85%; 
+            min-height: 60px; 
+            font-size: 11px; 
+            display: none; 
+            z-index: 15; 
+            box-sizing: border-box; 
+            box-shadow: 0 0 10px var(--gb-accent);
+        }
+
+        #dialog-name { font-weight: bold; color: var(--gb-accent); margin-bottom: 4px; display: block; text-shadow: 0 0 5px var(--gb-accent); }
+
+        #instruction-box { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: #000; 
+            color: var(--gb-glow);
+            border: 2px solid var(--gb-glow); 
+            padding: 15px; 
+            width: 80%; 
+            text-align: center; 
+            display: none; 
+            z-index: 20; 
+            font-weight: bold; 
+            font-size: 12px;
+            box-shadow: 0 0 15px var(--gb-glow);
+        }
+
+        /* Controles com Brilho Neon */
         #controls { width: 350px; height: 180px; position: relative; margin-top: 10px; }
-        .d-pad { position: absolute; left: 30px; top: 40px; width: 90px; height: 90px; }
-        .arrow { background: #333; border: none; width: 40px; height: 40px; position: absolute; color: white; font-size: 18px; }
-        #btnLeft { left: 0; top: 25px; }
-        #btnRight { right: 0; top: 25px; }
+        
+        .arrow { 
+            background: #111; 
+            border: 1px solid var(--gb-glow); 
+            width: 40px; 
+            height: 40px; 
+            position: absolute; 
+            color: var(--gb-glow); 
+            font-size: 18px; 
+            box-shadow: 0 0 8px var(--gb-glow);
+            cursor: pointer;
+        }
+        
+        #btnLeft { left: 30px; top: 65px; border-radius: 5px 0 0 5px; }
+        #btnRight { left: 80px; top: 65px; border-radius: 0 5px 5px 0; }
+        
         .action-btns { position: absolute; right: 30px; top: 30px; transform: rotate(-25deg); }
-        .btn-circle { width: 55px; height: 55px; border-radius: 50%; border: none; color: white; font-weight: bold; font-size: 20px; margin-left: 10px; box-shadow: 3px 3px 0px #6b1d41; }
-        #btnA { background: var(--gb-accent); }
-        #btnB { background: #444; }
-        #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 30; }
+        
+        .btn-circle { 
+            width: 55px; 
+            height: 55px; 
+            border-radius: 50%; 
+            border: 2px solid #fff; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 20px; 
+            margin-left: 10px; 
+            cursor: pointer;
+            text-shadow: 0 0 5px #fff;
+        }
+        
+        #btnA { 
+            background: var(--gb-accent); 
+            box-shadow: 0 0 15px var(--gb-accent); 
+            border-color: var(--gb-accent);
+        }
+        
+        #btnB { 
+            background: #333; 
+            box-shadow: 0 0 10px #555;
+            border-color: #555;
+        }
+
         .choice-btn { 
-            background: #444 !important; 
-            color: #fff !important;
-            border: 2px solid #000 !important; 
+            background: #000 !important; 
+            color: var(--gb-glow) !important;
+            border: 2px solid var(--gb-glow) !important; 
             margin: 10px 0 !important; 
             padding: 10px !important; 
             width: 100% !important; 
@@ -35,13 +142,22 @@
             display: block !important; 
             text-align: center !important;
             border-radius: 5px !important;
-            box-shadow: 0 4px 0 #222 !important;
+            box-shadow: 0 0 8px var(--gb-glow) !important;
             font-family: 'Courier New', Courier, monospace !important;
             text-transform: uppercase;
         }
-        .choice-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #222 !important;
+
+        #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 30; }
+        #start-btn { 
+            padding: 15px 30px; 
+            background: transparent; 
+            color: var(--gb-accent); 
+            border: 2px solid var(--gb-accent); 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-weight: bold;
+            box-shadow: 0 0 15px var(--gb-accent);
+            text-transform: uppercase;
         }
     </style>
 </head>
