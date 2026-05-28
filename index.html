@@ -213,13 +213,13 @@ document.getElementById('btnA').onclick = () => {
             setTimeout(() => { location.reload(); }, 5000);
         } else if (Math.abs(player.x - taverna.x - 100) < 100) {
             gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Taverna Nova Opção";
-            dContent.innerHTML = `
+            dContent.innerHTML = `Você está com sede e encontra uma taverna com sinuca no caminho:<br>
                 <button class="choice-btn" onclick="escolherTaverna('A')">A) Só umazinha 🍻</button>
                 <button class="choice-btn" onclick="escolherTaverna('B')">B) Passo longe! 😮‍💨</button>
                 <button class="choice-btn" onclick="escolherTaverna('C')">C) Comprar docinho 🍫</button>`;
         } else if (Math.abs(player.x - neymar.x) < 60 && neymar.visivel) {
             gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Neymar";
-            dContent.innerHTML = `
+            dContent.innerHTML = `Fala mano, blz? Topa me ajudar pra eu te colocar como herdeiro?<br>
                 <button class="choice-btn" onclick="escolherNeymar('X')">X) Claro que ajudo!! 🐂</button>
                 <button class="choice-btn" onclick="escolherNeymar('Y')">Y) Dar bicuda no traíra! 🙏</button>
                 <button class="choice-btn" onclick="escolherNeymar('Z')">Z) A patroa primeiro. 🫡</button>`;
