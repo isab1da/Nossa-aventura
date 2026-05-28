@@ -6,14 +6,15 @@
     <title>Nossa Aventura</title>
     <style>
         :root { 
-            --gb-body: #0a0a12; /* Fundo escuro profundo */
-            --gb-accent: #ff00ff; /* Rosa Neon */
-            --gb-glow: #00ffff; /* Ciano Neon */
-            --gb-screen-border: #1a1a2e;
+            --gb-body: #8b8b8b; /* Cinza do console original */
+            --gb-accent: #a93054; /* Bordô dos botões A/B */
+            --gb-screen: #8bac0f; /* Verde oliva da tela clássica */
+            --gb-dark-green: #306230; /* Verde escuro para textos da tela */
+            --gb-border: #757575;
         }
         
         body { 
-            background: #050505; 
+            background: #2b2b2b; 
             margin: 0; 
             display: flex; 
             flex-direction: column; 
@@ -24,13 +25,13 @@
             font-family: 'Courier New', Courier, monospace; 
         }
         
-        /* Efeito de brilho no console */
+        /* Moldura do Console Clássico */
         #game-console { 
             background: var(--gb-body); 
-            padding: 20px; 
-            border-radius: 10px 10px 60px 10px; 
-            border: 3px solid var(--gb-glow); 
-            box-shadow: 0 0 20px var(--gb-glow), inset 0 0 10px var(--gb-glow);
+            padding: 25px; 
+            border-radius: 10px 10px 80px 10px; 
+            border: 4px solid #555; 
+            box-shadow: 15px 15px 0px #1a1a1a;
             position: relative;
         }
 
@@ -38,125 +39,117 @@
             position: relative; 
             width: 320px; 
             height: 320px; 
-            border: 15px solid var(--gb-screen-border); 
+            border: 10px solid #333; 
             overflow: hidden; 
-            background: #000; 
-            box-shadow: inset 0 0 15px var(--gb-glow);
+            background: var(--gb-screen); /* Fundo verde oliva retrô */
+            border-radius: 5px;
+            box-shadow: inset 4px 4px 10px rgba(0,0,0,0.3);
         }
 
-        canvas { display: block; image-rendering: pixelated; }
-
-        /* Interface de Diálogo Neon */
+        canvas { 
+            display: block; 
+            image-rendering: pixelated; 
+            filter: contrast(1.2) sepia(0.2); /* Efeito de tela antiga */
+        }
+        
+        /* Interface de Diálogo Estilo RPG Antigo */
         #dialog-ui { 
             position: absolute; 
             bottom: 10px; 
             left: 50%; 
             transform: translateX(-50%); 
-            background: rgba(10, 10, 18, 0.9); 
-            border: 2px solid var(--gb-accent); 
-            color: #fff;
+            background: #e0f8d0; /* Fundo claro da tela */
+            border: 3px solid var(--gb-dark-green); 
+            color: var(--gb-dark-green);
             padding: 10px; 
-            width: 85%; 
+            width: 88%; 
             min-height: 60px; 
             font-size: 11px; 
             display: none; 
             z-index: 15; 
             box-sizing: border-box; 
-            box-shadow: 0 0 10px var(--gb-accent);
+            text-transform: uppercase;
         }
 
-        #dialog-name { font-weight: bold; color: var(--gb-accent); margin-bottom: 4px; display: block; text-shadow: 0 0 5px var(--gb-accent); }
+        #dialog-name { font-weight: bold; border-bottom: 1px solid var(--gb-dark-green); margin-bottom: 5px; }
 
         #instruction-box { 
             position: absolute; 
             top: 50%; 
             left: 50%; 
             transform: translate(-50%, -50%); 
-            background: #000; 
-            color: var(--gb-glow);
-            border: 2px solid var(--gb-glow); 
+            background: var(--gb-dark-green); 
+            color: var(--gb-screen);
+            border: 2px solid #000; 
             padding: 15px; 
             width: 80%; 
             text-align: center; 
             display: none; 
             z-index: 20; 
             font-weight: bold; 
-            font-size: 12px;
-            box-shadow: 0 0 15px var(--gb-glow);
         }
 
-        /* Controles com Brilho Neon */
-        #controls { width: 350px; height: 180px; position: relative; margin-top: 10px; }
+        /* Controles Clássicos */
+        #controls { width: 350px; height: 180px; position: relative; margin-top: 15px; }
         
         .arrow { 
-            background: #111; 
-            border: 1px solid var(--gb-glow); 
+            background: #333; 
+            border: none; 
             width: 40px; 
             height: 40px; 
             position: absolute; 
-            color: var(--gb-glow); 
-            font-size: 18px; 
-            box-shadow: 0 0 8px var(--gb-glow);
-            cursor: pointer;
+            color: #555; 
+            font-size: 20px; 
+            box-shadow: 2px 2px 0px #1a1a1a;
+            border-radius: 4px;
         }
         
-        #btnLeft { left: 30px; top: 65px; border-radius: 5px 0 0 5px; }
-        #btnRight { left: 80px; top: 65px; border-radius: 0 5px 5px 0; }
+        #btnLeft { left: 40px; top: 50px; }
+        #btnRight { left: 90px; top: 50px; }
         
-        .action-btns { position: absolute; right: 30px; top: 30px; transform: rotate(-25deg); }
+        .action-btns { position: absolute; right: 40px; top: 30px; transform: rotate(-25deg); }
         
         .btn-circle { 
             width: 55px; 
             height: 55px; 
             border-radius: 50%; 
-            border: 2px solid #fff; 
-            color: white; 
+            border: none; 
+            color: rgba(255,255,255,0.2); 
             font-weight: bold; 
-            font-size: 20px; 
-            margin-left: 10px; 
+            font-size: 24px; 
+            margin-left: 15px; 
             cursor: pointer;
-            text-shadow: 0 0 5px #fff;
+            box-shadow: 4px 4px 0px #6b1d41;
+            background: var(--gb-accent);
         }
         
-        #btnA { 
-            background: var(--gb-accent); 
-            box-shadow: 0 0 15px var(--gb-accent); 
-            border-color: var(--gb-accent);
-        }
-        
-        #btnB { 
-            background: #333; 
-            box-shadow: 0 0 10px #555;
-            border-color: #555;
-        }
+        #btnB { transform: translateY(15px); }
 
         .choice-btn { 
-            background: #000 !important; 
-            color: var(--gb-glow) !important;
-            border: 2px solid var(--gb-glow) !important; 
-            margin: 10px 0 !important; 
-            padding: 10px !important; 
+            background: var(--gb-dark-green) !important; 
+            color: var(--gb-screen) !important;
+            border: 2px solid #000 !important; 
+            margin: 8px 0 !important; 
+            padding: 8px !important; 
             width: 100% !important; 
-            font-size: 11px !important; 
+            font-size: 10px !important; 
             cursor: pointer !important; 
             display: block !important; 
             text-align: center !important;
-            border-radius: 5px !important;
-            box-shadow: 0 0 8px var(--gb-glow) !important;
-            font-family: 'Courier New', Courier, monospace !important;
-            text-transform: uppercase;
+            border-radius: 0 !important;
+            box-shadow: 3px 3px 0px #000 !important;
+            font-family: inherit !important;
         }
 
-        #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 30; }
+        #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(48, 98, 48, 0.8); display: flex; align-items: center; justify-content: center; z-index: 30; }
         #start-btn { 
             padding: 15px 30px; 
-            background: transparent; 
-            color: var(--gb-accent); 
-            border: 2px solid var(--gb-accent); 
-            border-radius: 5px; 
+            background: var(--gb-screen); 
+            color: var(--gb-dark-green); 
+            border: 4px solid var(--gb-dark-green); 
             cursor: pointer; 
             font-weight: bold;
-            box-shadow: 0 0 15px var(--gb-accent);
+            font-family: inherit;
             text-transform: uppercase;
         }
     </style>
