@@ -250,25 +250,6 @@ function aparecerIsabela(tipo) {
     }, 50);
 }
 
-document.getElementById('btnA').onclick = () => {
-    if(gameState === "playing") {
-        if(Math.abs(player.x - feia.x) < 50) {
-            gameState = "game_over_ciumes"; instrBox.style.display = 'block'; instrBox.style.background = "red";
-            instrBox.innerText = "GAME OVER! Por acaso essa parece a Isabela pra vc??";
-            setTimeout(() => { location.reload(); }, 5000);
-        } else if (Math.abs(player.x - taverna.x - 100) < 100) {
-            gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Taverna Nova Opção";
-            dContent.innerHTML = `<div onclick="escolherTaverna('A')">A) Só umazinha 🍻</div><div onclick="escolherTaverna('B')">B) Passo longe! 😮‍💨</div><div onclick="escolherTaverna('C')">C) Comprar docinho 🍫</div>`;
-        } else if (Math.abs(player.x - neymar.x) < 60 && neymar.visivel) {
-            gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Neymar";
-            dContent.innerHTML = `Fala mano, blz? Topa me ajudar pra eu te colocar como herdeiro?<br>
-                <div onclick="escolherNeymar('X')">X) Claro que ajudo!! 🐂</div><div onclick="escolherNeymar('Y')">Y) Dar bicuda no traíra! 🙏</div><div onclick="escolherNeymar('Z')">Z) A patroa primeiro. 🫡</div>`;
-        } else if (Math.abs(player.x - partner.x) < 60 && gameState !== "final_jogo") {
-             aparecerIsabela("Z");
-        } else { avancarDialogo(); }
-    } else { avancarDialogo(); }
-};
-
 document.getElementById('btnB').onclick = () => { if(gameState === "playing" && !player.isJumping && !player.dead) { player.velY = -12; player.isJumping = true; } };
 
 let keys = { L: false, R: false };
