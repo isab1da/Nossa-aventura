@@ -23,17 +23,31 @@
         #btnA { background: var(--gb-accent); }
         #btnB { background: #444; }
         #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 30; }
-        .choice-btn { background: #444; color: #fff; border: 2px solid #222; margin: 8px 0; padding: 12px; width: 100%; font-size: 11px; cursor: pointer; display: block; text-align: center; border-radius: 8px; box-shadow: 0 4px 0 #222; transition: transform 0.1s, box-shadow 0.1s;
-}
+        .choice-btn { 
+            background: #444 !important; 
+            color: #fff !important;
+            border: 2px solid #000 !important; 
+            margin: 10px 0 !important; 
+            padding: 10px !important; 
+            width: 100% !important; 
+            font-size: 11px !important; 
+            cursor: pointer !important; 
+            display: block !important; 
+            text-align: center !important;
+            border-radius: 5px !important;
+            box-shadow: 0 4px 0 #222 !important;
+            font-family: 'Courier New', Courier, monospace !important;
+            text-transform: uppercase;
+        }
         .choice-btn:active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #222;
-}
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #222 !important;
+        }
     </style>
 </head>
 <body>
 
-<div id="musica-fundo" style="display:none;"></div>
+<div id="musica-fundo"></div>
 
 <div id="game-console">
     <div id="game-container">
@@ -72,27 +86,6 @@ const imgNeymar = new Image(); imgNeymar.src = 'Neymar.PNG';
 let sprEder = new Image(); sprEder.src = 'Ele_frente.PNG';
 let sprIsabela = new Image(); sprIsabela.src = 'Ela_frente.PNG';
 
-// Configuração da Música de Fundo
-var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-var playerMusica;
-function onYouTubeIframeAPIReady() {
-    // Cria um player invisível
-    playerMusica = new YT.Player('musica-fundo', {
-        height: '0', width: '0',
-        videoId: 'bZr89T3jp-Q',
-        playerVars: { 'autoplay': 0, 'loop': 1, 'playlist': 'bZr89T3jp-Q' },
-        events: { 'onReady': onPlayerReady }
-    });
-}
-function onPlayerReady(event) {
-    // A música começará quando a cena for iniciada
-}
-
-
 // Posições e Objetos
 let eIntro = { x: 180, y: 150, w: 80, h: 140 }; 
 let pIntro = { x: -80, y: 150, w: 80, h: 140 }; 
@@ -127,12 +120,12 @@ const dialogosAventura = [
 function iniciarCena() { 
     document.getElementById('start-overlay').style.display='none'; 
     gameState="walking_in"; 
-    // Inicia a música
-    if (playerMusica && playerMusica.playVideo) {
+    if(playerMusica) {
+        playerMusica.unMute();
+        playerMusica.setVolume(50);
         playerMusica.playVideo();
     }
 }
-
 
 function avancarDialogo() {
     if (gameState === "dialogo_intro") {
@@ -177,7 +170,7 @@ function resetPlayer() {
     }, 500);
 }
 
-// LOGICA TAVERNA
+// LOGICA TAVERNA ATUALIZADA
 function escolherTaverna(opcao) {
     if (opcao === 'A') {
         dialogUI.style.display = 'none';
@@ -193,7 +186,7 @@ function escolherTaverna(opcao) {
     }
 }
 
-// LOGICA NEYMAR
+// LOGICA NEYMAR ATUALIZADA
 function escolherNeymar(opcao) {
     if (opcao === 'X') {
         dialogUI.style.display = 'none';
@@ -207,12 +200,34 @@ function escolherNeymar(opcao) {
     } else if (opcao === 'Z') {
         dialogUI.style.display = 'none';
         instrBox.style.display = 'block'; instrBox.innerText = "Com foco e determinação, você segue em busca de sua amada.";
-        setTimeout(() => { 
-            instrBox.style.display = 'none'; gameState = "playing"; 
-            partner.x = player.x + 400; 
-        }, 2500);
+        setTimeout(() => { instrBox.style.display = 'none'; gameState = "playing"; partner.x = player.x + 400; }, 2500);
     }
 }
+
+// ATUALIZAÇÃO DO BOTÃO A PARA GERAR OS BOTÕES CORRETOS
+document.getElementById('btnA').onclick = () => {
+    if(gameState === "playing") {
+        if(Math.abs(player.x - feia.x) < 50) {
+            gameState = "game_over_ciumes"; instrBox.style.display = 'block'; instrBox.style.background = "red";
+            instrBox.innerText = "GAME OVER! Por acaso essa parece a Isabela pra vc??";
+            setTimeout(() => { location.reload(); }, 5000);
+        } else if (Math.abs(player.x - taverna.x - 100) < 100) {
+            gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Taverna Nova Opção";
+            dContent.innerHTML = `
+                <button class="choice-btn" onclick="escolherTaverna('A')">A) Só umazinha 🍻</button>
+                <button class="choice-btn" onclick="escolherTaverna('B')">B) Passo longe! 😮‍💨</button>
+                <button class="choice-btn" onclick="escolherTaverna('C')">C) Comprar docinho 🍫</button>`;
+        } else if (Math.abs(player.x - neymar.x) < 60 && neymar.visivel) {
+            gameState = "menu_opcoes"; dialogUI.style.display = 'block'; dName.innerText = "Neymar";
+            dContent.innerHTML = `
+                <button class="choice-btn" onclick="escolherNeymar('X')">X) Claro que ajudo!! 🐂</button>
+                <button class="choice-btn" onclick="escolherNeymar('Y')">Y) Dar bicuda no traíra! 🙏</button>
+                <button class="choice-btn" onclick="escolherNeymar('Z')">Z) A patroa primeiro. 🫡</button>`;
+        } else if (Math.abs(player.x - partner.x) < 60 && gameState !== "final_jogo") {
+             aparecerIsabela("Z");
+        } else { avancarDialogo(); }
+    } else { avancarDialogo(); }
+};
 
 
 function aparecerIsabela(tipo) {
@@ -324,6 +339,22 @@ function draw() {
     requestAnimationFrame(draw);
 }
 draw();
+
+let playerMusica;
+function onYouTubeIframeAPIReady() {
+    playerMusica = new YT.Player('musica-fundo', {
+        height: '0', width: '0', videoId: 'bZr89T3jp-Q',
+        playerVars: { 'autoplay': 1, 'loop': 1, 'playlist': 'bZr89T3jp-Q', 'controls': 0 },
+        events: { 'onReady': (e) => e.target.mute() } // Começa mudo para permitir o autoplay
+    });
+}
+
+// Carrega a API do YouTube
+let tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+let firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
 </script>
 </body>
 </html>
